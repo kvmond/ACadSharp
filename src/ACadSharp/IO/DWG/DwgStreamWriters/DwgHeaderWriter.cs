@@ -866,9 +866,9 @@ namespace ACadSharp.IO.DWG
 				//CELWEIGHT Flags & 0x001F
 				int flags = ((int)this._header.CurrentEntityLineWeight & 0x1F) |
 							//ENDCAPS Flags & 0x0060
-							(this._header.EndCaps << 0x5) |
+							((this._header.EndCaps & 0x3) << 0x5) |
 							//JOINSTYLE Flags & 0x0180
-							(this._header.JoinStyle << 0x7);
+							((this._header.JoinStyle & 0x3) << 0x7);
 
 				//LWDISPLAY!(Flags & 0x0200)
 				if (!this._header.DisplayLineWeight)
@@ -886,7 +886,7 @@ namespace ACadSharp.IO.DWG
 					flags |= 0x800;
 				}
 				//PSTYLEMODE Flags & 0x2000
-				if (this._header.PlotStyleMode == 1)
+				if (this._header.PlotStyleMode != 0)
 				{
 					flags |= 0x2000;
 				}

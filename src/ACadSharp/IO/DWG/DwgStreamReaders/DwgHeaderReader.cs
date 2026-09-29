@@ -905,19 +905,19 @@ namespace ACadSharp.IO.DWG
 				//CELWEIGHT Flags & 0x001F
 				_header.CurrentEntityLineWeight = (LineWeightType)(flags & 0x1F);
 				//ENDCAPS Flags & 0x0060
-				_header.EndCaps = (short)(flags & 0x60);
+				_header.EndCaps = (short)((flags & 0x60) >> 5);
 				//JOINSTYLE Flags & 0x0180
-				_header.JoinStyle = (short)(flags & 0x180);
+				_header.JoinStyle = (short)((flags & 0x180) >> 7);
 				//LWDISPLAY!(Flags & 0x0200)
-				_header.DisplayLineWeight = (flags & 0x200) == 1;
+				_header.DisplayLineWeight = (flags & 0x200) == 0;
 				//XEDIT!(Flags & 0x0400)
-				_header.XEdit = (short)(flags & 0x400) == 1;
+				_header.XEdit = (flags & 0x400) == 0;
 				//EXTNAMES Flags & 0x0800
-				_header.ExtendedNames = (flags & 0x800) == 1;
+				_header.ExtendedNames = (flags & 0x800) != 0;
 				//PSTYLEMODE Flags & 0x2000
-				_header.PlotStyleMode = (short)(flags & 0x2000);
+				_header.PlotStyleMode = (short)((flags & 0x2000) != 0 ? 1 : 0);
 				//OLESTARTUP Flags & 0x4000
-				_header.LoadOLEObject = (flags & 0x4000) == 1;
+				_header.LoadOLEObject = (flags & 0x4000) != 0;
 
 				//BS: INSUNITS
 				_header.InsUnits = (UnitsType)_reader.ReadBitShort();
