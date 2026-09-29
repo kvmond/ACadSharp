@@ -161,6 +161,19 @@ public class DwgReader : CadReaderBase<DwgReaderConfiguration>
 	}
 
 	/// <summary>
+	/// Read the object map of the dwg file: the handle of every object the file contains and its offset.
+	/// </summary>
+	/// <remarks>
+	/// Refers to AcDb:Handles data section. Comparing it with the objects in the read document reveals
+	/// objects that were not read.
+	/// </remarks>
+	/// <returns></returns>
+	public IReadOnlyDictionary<ulong, long> ReadObjectMap()
+	{
+		return this.readHandles();
+	}
+
+	/// <summary>
 	/// Read the preview image of the dwg file.
 	/// </summary>
 	/// <remarks>
