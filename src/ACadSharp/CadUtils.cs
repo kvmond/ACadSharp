@@ -232,6 +232,29 @@ internal static class CadUtils
 		return TextEncoding.Windows1252();
 	}
 
+	/// <summary>
+	/// .NET encoding for a code page, or <paramref name="fallback"/> when it cannot be resolved.
+	/// </summary>
+	public static Encoding GetEncoding(CodePage code, Encoding fallback)
+	{
+		if (code == CodePage.Unknown)
+		{
+			return fallback;
+		}
+
+		try
+		{
+#if !NET48
+			Encoding.RegisterProvider(System.Text.CodePagesEncodingProvider.Instance);
+#endif
+			return Encoding.GetEncoding((int)code);
+		}
+		catch (Exception)
+		{
+			return fallback;
+		}
+	}
+
 	public static string GetCodePageName(CodePage value)
 	{
 		return _dxfEncodingMap.FirstOrDefault(o => o.Value == value).Key;
