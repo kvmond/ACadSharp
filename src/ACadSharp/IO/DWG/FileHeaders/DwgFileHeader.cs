@@ -13,6 +13,11 @@ namespace ACadSharp.IO.DWG
 
 		public CodePage DrawingCodePage { get; set; }
 
+		/// <summary>
+		/// Code page number exactly as stored in the file header.
+		/// </summary>
+		public short DrawingCodePageNumber { get; set; }
+
 		public DwgFileHeader() { }
 
 		public DwgFileHeader(ACadVersion version)

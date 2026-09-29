@@ -155,6 +155,15 @@ public class CadHeader
 	public string CodePage { get; set; } = "ANSI_1252";
 
 	/// <summary>
+	/// Code page number as stored in the DWG file header (for example 40 for ANSI_949).
+	/// </summary>
+	/// <remarks>
+	/// Several numbers map to the same encoding (25 KSC5601 and 40 ANSI_949 both use Korean);
+	/// the writer keeps this number when it still matches <see cref="CodePage"/>.
+	/// </remarks>
+	public int? DwgCodePageNumber { get; set; }
+
+	/// <summary>
 	/// Local date/time of drawing creation (see Special Handling of Date/Time Variables).
 	/// </summary>
 	/// <remarks>

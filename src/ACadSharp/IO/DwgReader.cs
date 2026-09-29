@@ -145,6 +145,7 @@ public class DwgReader : CadReaderBase<DwgReaderConfiguration>
 
 		CadHeader header = new CadHeader();
 		header.CodePage = CadUtils.GetCodePageName(this._fileHeader.DrawingCodePage);
+		header.DwgCodePageNumber = this._fileHeader.DrawingCodePageNumber;
 
 		IDwgStreamReader sreader = this.getSectionStream(DwgSectionDefinition.Header);
 
@@ -728,7 +729,8 @@ public class DwgReader : CadReaderBase<DwgReaderConfiguration>
 		sreader.ReadBytes(2);
 
 		//Bytes at 0x13 and 0x14 are a raw short indicating the value of the code page for this drawing file.
-		fileheader.DrawingCodePage = CadUtils.GetCodePage(sreader.ReadShort());
+		fileheader.DrawingCodePageNumber = sreader.ReadShort();
+		fileheader.DrawingCodePage = CadUtils.GetCodePage(fileheader.DrawingCodePageNumber);
 		this._encoding = getListedEncoding((int)fileheader.DrawingCodePage);
 
 		//At 0x15 is a long that tells how many sets of recno/seeker/length records follow.
@@ -1230,7 +1232,8 @@ public class DwgReader : CadReaderBase<DwgReaderConfiguration>
 		fileheader.AppReleaseVersion = sreader.ReadByte();
 
 		//0x13	2	Codepage
-		fileheader.DrawingCodePage = CadUtils.GetCodePage(sreader.ReadShort());
+		fileheader.DrawingCodePageNumber = sreader.ReadShort();
+		fileheader.DrawingCodePage = CadUtils.GetCodePage(fileheader.DrawingCodePageNumber);
 		this._encoding = sreader.Encoding = getListedEncoding((int)fileheader.DrawingCodePage);
 
 		//Advance empty bytes

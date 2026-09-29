@@ -870,7 +870,8 @@ namespace ACadSharp.IO.DWG
 			}
 			else
 			{
-				value = this.ReadString(textLength, TextEncoding.GetListedEncoding((CodePage)encodingKey));
+				//The key is a DWG code page number (for example 40 for ANSI_949), not a Windows code page
+				value = this.ReadString(textLength, TextEncoding.GetListedEncoding(CadUtils.GetCodePage(encodingKey)));
 			}
 
 			return value;

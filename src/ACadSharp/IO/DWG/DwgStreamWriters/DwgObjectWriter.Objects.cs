@@ -2255,12 +2255,13 @@ internal partial class DwgObjectWriter : DwgSectionIO
 		else if (string.IsNullOrEmpty(text))
 		{
 			ms.Write<short>(0);
-			ms.Write((byte)CadUtils.GetCodeIndex((CodePage)this._writer.Encoding.CodePage));
+			ms.Write((byte)CadUtils.GetCodeIndex((CodePage)this._writer.Encoding.CodePage, this._document.Header.DwgCodePageNumber));
 		}
 		else
 		{
-			ms.Write<short>((short)text.Length);
-			ms.Write((byte)CadUtils.GetCodeIndex((CodePage)this._writer.Encoding.CodePage));
+			//Length is in bytes: multi-byte code pages differ from the character count
+			ms.Write<short>((short)this._writer.Encoding.GetByteCount(text));
+			ms.Write((byte)CadUtils.GetCodeIndex((CodePage)this._writer.Encoding.CodePage, this._document.Header.DwgCodePageNumber));
 			ms.Write(text, this._writer.Encoding);
 		}
 	}

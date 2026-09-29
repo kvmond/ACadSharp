@@ -82,7 +82,7 @@ internal abstract class DwgFileHeaderWriterBase<T> : IDwgFileHeaderWriter
 
 	protected ushort getFileCodePage()
 	{
-		ushort codePage = (ushort)CadUtils.GetCodeIndex(CadUtils.GetCodePage(_document.Header.CodePage));
+		ushort codePage = (ushort)CadUtils.GetCodeIndex(CadUtils.GetCodePage(_document.Header.CodePage), _document.Header.DwgCodePageNumber);
 		if (codePage < 1)
 		{
 			return 30;

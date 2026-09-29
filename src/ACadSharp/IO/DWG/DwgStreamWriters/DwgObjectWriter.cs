@@ -1146,10 +1146,11 @@ internal partial class DwgObjectWriter : DwgSectionIO
 						}
 						else
 						{
-							var encodingIndex = CadUtils.GetCodeIndex((CSUtilities.Text.CodePage)this._writer.Encoding.CodePage);
+							var encodingIndex = CadUtils.GetCodeIndex((CSUtilities.Text.CodePage)this._writer.Encoding.CodePage, this._document.Header.DwgCodePageNumber);
 							byte[] bytes = this._writer.Encoding.GetBytes(string.IsNullOrEmpty(str.Value) ? string.Empty : str.Value);
 
-							mstream.Write(LittleEndianConverter.Instance.GetBytes((ushort)str.Value.Length), 0, 2);
+							//Length is in bytes: multi-byte code pages (Korean, Japanese, Chinese) differ from the character count
+							mstream.Write(LittleEndianConverter.Instance.GetBytes((ushort)bytes.Length), 0, 2);
 							mstream.WriteByte((byte)encodingIndex);
 							mstream.Write(bytes, 0, bytes.Length);
 						}

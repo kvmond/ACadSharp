@@ -247,6 +247,20 @@ internal static class CadUtils
 		return _pageCodes.ToList().IndexOf(code);
 	}
 
+	/// <summary>
+	/// Code page number for <paramref name="code"/>, keeping <paramref name="preferred"/> when it maps to
+	/// the same encoding (the table lists some encodings under two numbers).
+	/// </summary>
+	public static int GetCodeIndex(CodePage code, int? preferred)
+	{
+		if (preferred is int number && number > 0 && number < _pageCodes.Length && _pageCodes[number] == code)
+		{
+			return number;
+		}
+
+		return GetCodeIndex(code);
+	}
+
 	public static ACadVersion GetVersionFromName(string name)
 	{
 		//Modify the format of the name
