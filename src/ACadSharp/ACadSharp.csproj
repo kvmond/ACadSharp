@@ -19,7 +19,7 @@
 		<PackageReadmeFile>README.md</PackageReadmeFile>
 		<Version>3.8.0</Version>
 		<!-- Lucida-CAD patched build: reports tell which library produced them. -->
-		<InformationalVersion>3.8.0-lucida.1</InformationalVersion>
+		<InformationalVersion>3.8.0-lucida.2</InformationalVersion>
 		<PackageOutputPath>../nupkg</PackageOutputPath>
 		<SignAssembly>True</SignAssembly>
 		<AssemblyOriginatorKeyFile>../ACadSharp.snk</AssemblyOriginatorKeyFile>
