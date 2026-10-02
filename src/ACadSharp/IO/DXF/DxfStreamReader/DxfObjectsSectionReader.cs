@@ -3110,9 +3110,15 @@ internal class DxfObjectsSectionReader : DxfSectionReaderBase
 			case 420:
 				return true;
 			default:
+				//The common object codes (handle, owner, reactors, extension dictionary) come before the subclass and are
+				//read as for any object; without them the style got a new handle and its dictionary lost its entries.
+				if (this.currentSubclass != DxfSubclassMarker.VisualStyle)
+				{
+					return false;
+				}
+
 				//Avoid noise while is not implemented
 				return true;
-				return this.tryAssignCurrentValue(template.CadObject, map.SubClasses[DxfSubclassMarker.VisualStyle]);
 		}
 	}
 
