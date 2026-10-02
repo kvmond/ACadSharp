@@ -46,6 +46,19 @@ namespace ACadSharp.IO.Templates
 			{
 				insert.Attributes.Seqend = seqend;
 			}
+			else
+			{
+				//A DXF lists the SEQEND after the attributes as one more owned entity, as it does for polylines.
+				//It is set before the attributes are added, as above: adding the first attribute registers it.
+				foreach (ulong handle in this.OwnedObjectsHandlers)
+				{
+					if (builder.TryGetCadObject(handle, out Seqend owned))
+					{
+						insert.Attributes.Seqend = owned;
+						break;
+					}
+				}
+			}
 
 			if (this.FirstAttributeHandle.HasValue)
 			{
