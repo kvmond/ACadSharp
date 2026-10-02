@@ -126,6 +126,14 @@ namespace ACadSharp.IO
 			return Read(File.Open(filename, FileMode.Open, FileAccess.Read, FileShare.ReadWrite), notification);
 		}
 
+		private readonly HashSet<string> _headerVariables = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+		/// <summary>
+		/// The variables the HEADER section names, once it has been read: callers can tell a variable the file leaves out
+		/// from one it sets to the default value. Empty when the file has no HEADER section.
+		/// </summary>
+		public IReadOnlyCollection<string> HeaderVariables => this._headerVariables;
+
 		/// <inheritdoc/>
 		public override CadDocument Read()
 		{
@@ -207,6 +215,10 @@ namespace ACadSharp.IO
 			{
 				//Get the current header variable
 				string currVar = this._reader.ValueAsString;
+				if (currVar != null)
+				{
+					this._headerVariables.Add(currVar);
+				}
 
 				if (this._reader.ValueAsString == null || !headerMap.TryGetValue(currVar, out CadSystemVariable data))
 				{
@@ -282,7 +294,8 @@ namespace ACadSharp.IO
 		/// <remarks>
 		/// The DXF counterpart of <see cref="DwgReader.ReadObjectMap"/>: callers compare it with the objects of the
 		/// read document to find records that were not read. A record's handle comes before its first subclass
-		/// marker (group 100); records without one (R12 files without handles) are left out.
+		/// record's first group 5 or 105 is its handle, wherever the writer put it; records without one (R12 files
+		/// without handles) are left out.
 		/// </remarks>
 		public IReadOnlyList<ulong> ReadHandles()
 		{
@@ -292,7 +305,8 @@ namespace ACadSharp.IO
 			List<ulong> handles = new List<ulong>();
 			bool inSection = false;
 			bool expectHandle = false;
-			while (this._reader.ValueAsString != DxfFileToken.EndOfFile)
+			//The file ends at group 0 EOF; a text value "EOF" in another group does not end it.
+			while (!(this._reader.DxfCode == DxfCode.Start && this._reader.ValueAsString == DxfFileToken.EndOfFile))
 			{
 				if (this._reader.DxfCode == DxfCode.Start)
 				{
@@ -322,10 +336,6 @@ namespace ACadSharp.IO
 						handles.Add(handle);
 					}
 
-					expectHandle = false;
-				}
-				else if (this._reader.Code == 100)
-				{
 					expectHandle = false;
 				}
 

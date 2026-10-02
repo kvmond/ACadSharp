@@ -864,7 +864,8 @@ namespace ACadSharp.IO.DWG
 				//BL: Flags:
 
 				//CELWEIGHT Flags & 0x001F
-				int flags = ((int)this._header.CurrentEntityLineWeight & 0x1F) |
+				//The DWG stores the line weight's index (29 ByLayer, 30 ByBlock, 31 Default), not its value.
+				int flags = (CadUtils.ToIndex(this._header.CurrentEntityLineWeight) & 0x1F) |
 							//ENDCAPS Flags & 0x0060
 							((this._header.EndCaps & 0x3) << 0x5) |
 							//JOINSTYLE Flags & 0x0180

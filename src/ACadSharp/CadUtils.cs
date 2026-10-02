@@ -304,7 +304,9 @@ internal static class CadUtils
 			return null;
 		}
 
-		return name.StartsWith("ansi", StringComparison.OrdinalIgnoreCase) ? Array.LastIndexOf(_pageCodes, code) : Array.IndexOf(_pageCodes, code);
+		int index = name.StartsWith("ansi", StringComparison.OrdinalIgnoreCase) ? Array.LastIndexOf(_pageCodes, code) : Array.IndexOf(_pageCodes, code);
+		//Names the DXF table knows without a DWG number (DOS720, ISO8859-10, ...) have none.
+		return index < 0 ? null : index;
 	}
 
 	public static ACadVersion GetVersionFromName(string name)

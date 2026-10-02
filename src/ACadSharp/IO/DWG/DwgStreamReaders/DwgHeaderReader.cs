@@ -903,7 +903,7 @@ namespace ACadSharp.IO.DWG
 				//BL: Flags:
 				int flags = _reader.ReadBitLong();
 				//CELWEIGHT Flags & 0x001F
-				_header.CurrentEntityLineWeight = (LineWeightType)(flags & 0x1F);
+				_header.CurrentEntityLineWeight = CadUtils.ToValue((byte)(flags & 0x1F));
 				//ENDCAPS Flags & 0x0060
 				_header.EndCaps = (short)((flags & 0x60) >> 5);
 				//JOINSTYLE Flags & 0x0180

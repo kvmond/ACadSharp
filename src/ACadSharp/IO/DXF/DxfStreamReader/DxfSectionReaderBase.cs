@@ -189,7 +189,7 @@ internal abstract class DxfSectionReaderBase
 			case DxfFileToken.EntityHatch:
 				return this.readEntityCodes<Hatch>(new CadHatchTemplate(), this.readHatch);
 			case DxfFileToken.EntityInsert:
-				return this.readEntityCodes<Insert>(new CadInsertTemplate(), this.readInsert);
+				return this.readInsertWithAttributes();
 			case DxfFileToken.EntityMText:
 				return this.readEntityCodes<MText>(new CadTextEntityTemplate(new MText()), this.readTextEntity);
 			case DxfFileToken.EntityMLine:
@@ -1030,8 +1030,7 @@ internal abstract class DxfSectionReaderBase
 				vertexTemplate.OwnerHandle = template.CadObject.Handle;
 			}
 
-			template.OwnedObjectsHandlers.Add(vertexTemplate.CadObject.Handle);
-			_builder.AddTemplate(vertexTemplate);
+			this.addOwned(template, vertexTemplate);
 		}
 
 		while (this._reader.Code == 0 && this._reader.ValueAsString == DxfFileToken.EndSequence)
@@ -1045,8 +1044,54 @@ internal abstract class DxfSectionReaderBase
 				seqendTemplate.OwnerHandle = template.CadObject.Handle;
 			}
 
-			template.OwnedObjectsHandlers.Add(seqendTemplate.CadObject.Handle);
-			_builder.AddTemplate(seqendTemplate);
+			this.addOwned(template, seqendTemplate);
+		}
+
+		return template;
+	}
+
+	/// <summary>
+	/// Adds an entity read after its owner (a vertex, an attribute, a SEQEND) to the owner. Without a handle in the
+	/// file, or with one already taken, the entity gets its handle when the document is built and joins then.
+	/// </summary>
+	private void addOwned(ICadOwnerTemplate owner, CadTemplate template)
+	{
+		this._builder.AddTemplate(template);
+
+		if (template.CadObject.Handle == 0)
+		{
+			this._builder.UnhandledOwned.Add((owner, template));
+		}
+		else
+		{
+			owner.OwnedObjectsHandlers.Add(template.CadObject.Handle);
+		}
+	}
+
+	/// <summary>
+	/// An INSERT and the ATTRIB records and SEQEND that follow it. R12 files and other writers give them no owner
+	/// handle (group 330), so the order of the records is what ties them to the insert.
+	/// </summary>
+	private CadEntityTemplate readInsertWithAttributes()
+	{
+		var template = (CadInsertTemplate)this.readEntityCodes<Insert>(new CadInsertTemplate(), this.readInsert);
+
+		bool attributes = false;
+		while (this._reader.Code == 0 && this._reader.ValueAsString == DxfFileToken.EntityAttribute)
+		{
+			attributes = true;
+			this.currentSubclass = string.Empty;
+			var attribute = this.readEntityCodes<AttributeEntity>(new CadAttributeTemplate(new AttributeEntity()), this.readAttributeDefinition);
+			attribute.OwnerHandle ??= template.CadObject.Handle;
+			this.addOwned(template, attribute);
+		}
+
+		if (attributes && this._reader.Code == 0 && this._reader.ValueAsString == DxfFileToken.EndSequence)
+		{
+			var seqendTemplate = new CadEntityTemplate<Seqend>(new Seqend());
+			this.readEntityCodes<Seqend>(seqendTemplate, this.readEntitySubclassMap);
+			seqendTemplate.OwnerHandle ??= template.CadObject.Handle;
+			this.addOwned(template, seqendTemplate);
 		}
 
 		return template;
