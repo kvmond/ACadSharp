@@ -163,7 +163,15 @@ namespace ACadSharp.IO.DXF
 				}
 				else if (this._builder.TryGetObjectTemplate(entityTemplate.OwnerHandle, out ICadOwnerTemplate owner))
 				{
-					owner.OwnedObjectsHandlers.Add(entityTemplate.CadObject.Handle);
+					if (entityTemplate.CadObject.Handle == 0)
+					{
+						//No handle in the file, or one already taken: the handle is given when the document is built.
+						this._builder.UnhandledOwned.Add((owner, entityTemplate));
+					}
+					else
+					{
+						owner.OwnedObjectsHandlers.Add(entityTemplate.CadObject.Handle);
+					}
 				}
 				else
 				{

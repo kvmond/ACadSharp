@@ -30,6 +30,12 @@ internal class DxfDocumentBuilder : CadDocumentBuilder
 
 	public List<CadTemplate> OrphanTemplates { get; set; } = new();
 
+	/// <summary>
+	/// Entities whose record had no handle, or a handle already taken: they get one only when the document is built,
+	/// so they join their owner then.
+	/// </summary>
+	public List<(ICadOwnerTemplate Owner, CadTemplate Template)> UnhandledOwned { get; } = new();
+
 	public DxfDocumentBuilder(ACadVersion version, CadDocument document, DxfReaderConfiguration configuration) : base(version, document)
 	{
 		this.Configuration = configuration;
@@ -46,6 +52,11 @@ internal class DxfDocumentBuilder : CadDocumentBuilder
 		}
 
 		this.createMissingHandles();
+
+		foreach (var (owner, template) in this.UnhandledOwned)
+		{
+			owner.OwnedObjectsHandlers.Add(template.CadObject.Handle);
+		}
 
 		this.ModelSpaceTemplate.OwnedObjectsHandlers.UnionWith(this.ModelSpaceEntities.Select(o => o.Handle));
 
