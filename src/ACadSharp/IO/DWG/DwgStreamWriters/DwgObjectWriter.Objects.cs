@@ -50,6 +50,8 @@ internal partial class DwgObjectWriter : DwgSectionIO
 			case AecCleanupGroup:
 			case AecBinRecord:
 			case DimensionAssociation:
+			//Its DWG form is not implemented (the DWG reader does not read it either); a DXF reads it.
+			case MTextAttributeObjectContextData:
 			case UnknownNonGraphicalObject:
 			case VisualStyle:
 			case ProxyObject:
