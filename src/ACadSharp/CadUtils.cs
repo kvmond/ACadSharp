@@ -36,7 +36,10 @@ internal static class CadUtils
 		{"ansi_874"  ,CodePage.Windows874},
 		{"ansi_932"  ,CodePage.Shift_jis},
 		{"ansi_936"  ,CodePage.Gb2312},
+		{"ansi_949"  ,CodePage.Ksc5601},
 		{"ansi_950"  ,CodePage.big5},
+		{"ansi_1258" ,CodePage.Windows1258},
+		{"ansi_1361" ,CodePage.Johab},
 		{"ansi_1250" ,CodePage.Windows1250},
 		{"ansi1250"  ,CodePage.Windows1250},
 		{"ansi_1251" ,CodePage.Windows1251},
@@ -282,6 +285,26 @@ internal static class CadUtils
 		}
 
 		return GetCodeIndex(code);
+	}
+
+	/// <summary>
+	/// DWG code page number for a $DWGCODEPAGE name. The table lists some encodings twice (DOS and ANSI);
+	/// an "ANSI_" name takes the ANSI number, as AutoCAD writes it (ANSI_949 is 40, not 25).
+	/// </summary>
+	public static int? GetCodeIndexForName(string name)
+	{
+		if (string.IsNullOrEmpty(name))
+		{
+			return null;
+		}
+
+		CodePage code = GetCodePage(name);
+		if (code == CodePage.Unknown)
+		{
+			return null;
+		}
+
+		return name.StartsWith("ansi", StringComparison.OrdinalIgnoreCase) ? Array.LastIndexOf(_pageCodes, code) : Array.IndexOf(_pageCodes, code);
 	}
 
 	public static ACadVersion GetVersionFromName(string name)

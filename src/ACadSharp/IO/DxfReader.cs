@@ -269,6 +269,9 @@ namespace ACadSharp.IO
 				}
 			}
 
+			// Keep the file's code page number for the DWG writer (the DWG reader keeps it from the file header).
+			header.DwgCodePageNumber = CadUtils.GetCodeIndexForName(header.CodePage);
+
 			return header;
 		}
 
