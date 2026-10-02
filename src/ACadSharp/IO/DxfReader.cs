@@ -276,6 +276,66 @@ namespace ACadSharp.IO
 		}
 
 		/// <summary>
+		/// Handles of the records in the TABLES, BLOCKS, ENTITIES and OBJECTS sections as the file writes them
+		/// (group 5, or 105 for DIMSTYLE), in file order and with repeats, without building a document.
+		/// </summary>
+		/// <remarks>
+		/// The DXF counterpart of <see cref="DwgReader.ReadObjectMap"/>: callers compare it with the objects of the
+		/// read document to find records that were not read. A record's handle comes before its first subclass
+		/// marker (group 100); records without one (R12 files without handles) are left out.
+		/// </remarks>
+		public IReadOnlyList<ulong> ReadHandles()
+		{
+			this._reader = this._reader ?? this.getReader();
+			this._reader.Find(DxfFileToken.BeginSection);
+
+			List<ulong> handles = new List<ulong>();
+			bool inSection = false;
+			bool expectHandle = false;
+			while (this._reader.ValueAsString != DxfFileToken.EndOfFile)
+			{
+				if (this._reader.DxfCode == DxfCode.Start)
+				{
+					string token = this._reader.ValueAsString;
+					if (token == DxfFileToken.BeginSection)
+					{
+						this._reader.ReadNext();
+						string name = this._reader.ValueAsString;
+						inSection = name == DxfFileToken.TablesSection || name == DxfFileToken.BlocksSection
+							|| name == DxfFileToken.EntitiesSection || name == DxfFileToken.ObjectsSection;
+						expectHandle = false;
+					}
+					else if (token == DxfFileToken.EndSection)
+					{
+						inSection = false;
+						expectHandle = false;
+					}
+					else
+					{
+						expectHandle = inSection;
+					}
+				}
+				else if (expectHandle && (this._reader.Code == 5 || this._reader.Code == 105))
+				{
+					if (this._reader.Value is ulong handle)
+					{
+						handles.Add(handle);
+					}
+
+					expectHandle = false;
+				}
+				else if (this._reader.Code == 100)
+				{
+					expectHandle = false;
+				}
+
+				this._reader.ReadNext();
+			}
+
+			return handles;
+		}
+
+		/// <summary>
 		/// Read only the tables section in the dxf document
 		/// </summary>
 		/// <remarks>
