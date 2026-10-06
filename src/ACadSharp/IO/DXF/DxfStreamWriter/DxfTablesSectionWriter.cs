@@ -126,6 +126,14 @@ namespace ACadSharp.IO.DXF
 			this._writer.Write(70, (short)block.Units, map);
 			this._writer.Write(280, (byte)(block.IsExplodable ? 1u : 0u), map);
 			this._writer.Write(281, (byte)(block.CanScale ? 1u : 0u), map);
+			// Both ASCII and binary DXF use group 310 chunks of at most 127 bytes.
+			byte[] preview = block.Preview ?? Array.Empty<byte>();
+			for (int offset = 0; offset < preview.Length; offset += 127)
+			{
+				byte[] chunk = new byte[Math.Min(127, preview.Length - offset)];
+				Array.Copy(preview, offset, chunk, 0, chunk.Length);
+				this._writer.Write(310, chunk);
+			}
 		}
 
 		private void writeDimensionStyle(DimensionStyle style, DxfClassMap map)

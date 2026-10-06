@@ -1698,8 +1698,8 @@ namespace ACadSharp.IO.DWG
 				dimStyle.AlternateUnitToleranceZeroHandling = (ZeroHandling)this._objectReader.ReadBitShort();
 				//DIMUPT B 288
 				dimStyle.CursorUpdate = this._objectReader.ReadBit();
-				//DIMFIT BS 287
-				dimStyle.DimensionFit = this._objectReader.ReadBitShort();
+				//DIMATFIT BS 289 (R2000+). The obsolete DIMFIT property is a separate field.
+				dimStyle.DimensionTextArrowFit = (TextArrowFitType)this._objectReader.ReadBitShort();
 			}
 
 			//R2007+:
@@ -3794,6 +3794,7 @@ namespace ACadSharp.IO.DWG
 				{
 					//Column height count BL 72
 					int count = this._objectReader.ReadBitLong();
+					mtext.ColumnData.ColumnCount = count;
 					//Columnn width BD 44
 					mtext.ColumnData.Width = this._objectReader.ReadBitDouble();
 					//Gutter BD 45

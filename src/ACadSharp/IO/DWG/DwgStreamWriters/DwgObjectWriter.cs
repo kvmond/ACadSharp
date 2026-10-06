@@ -356,7 +356,9 @@ internal partial class DwgObjectWriter : DwgSectionIO
 			this._writer.WriteVariableText(record.BlockEntity.Comments);
 
 			//Size of preview data BL Indicates number of bytes of data following.
-			this._writer.WriteBitLong(0);
+			byte[] preview = record.Preview ?? Array.Empty<byte>();
+			this._writer.WriteBitLong(preview.Length);
+			this._writer.WriteBytes(preview, 0, preview.Length);
 		}
 
 		//R2007+:
@@ -775,8 +777,8 @@ internal partial class DwgObjectWriter : DwgSectionIO
 			this._writer.WriteBitShort((short)dimStyle.AlternateUnitToleranceZeroHandling);
 			//DIMUPT B 288
 			this._writer.WriteBit(dimStyle.CursorUpdate);
-			//DIMFIT BS 287
-			this._writer.WriteBitShort(3);
+			//DIMATFIT BS 289 (R2000+; DIMFIT 287 is the obsolete pre-R2000 variable).
+			this._writer.WriteBitShort((short)dimStyle.DimensionTextArrowFit);
 		}
 
 		//R2007+:

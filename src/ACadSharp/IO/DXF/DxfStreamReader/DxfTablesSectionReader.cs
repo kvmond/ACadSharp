@@ -297,6 +297,9 @@ internal class DxfTablesSectionReader : DxfSectionReaderBase
 
 		switch (this._reader.Code)
 		{
+			case 310:
+				tmp.PreviewBytes.AddRange(this._reader.ValueAsBinaryChunk);
+				return true;
 			case 70:
 				tmp.CadObject.Units = (UnitsType)this._reader.ValueAsShort;
 				return true;

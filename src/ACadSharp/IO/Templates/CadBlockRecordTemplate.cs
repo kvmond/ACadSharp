@@ -9,6 +9,8 @@ namespace ACadSharp.IO.Templates;
 
 internal class CadBlockRecordTemplate : CadTableEntryTemplate<BlockRecord>, ICadOwnerTemplate
 {
+	public List<byte> PreviewBytes { get; } = new();
+
 	public ulong? BeginBlockHandle { get; set; }
 
 	public CadBlockEntityTemplate BlockEntityTemplate { get; set; }
@@ -65,6 +67,11 @@ internal class CadBlockRecordTemplate : CadTableEntryTemplate<BlockRecord>, ICad
 	protected override void build(CadDocumentBuilder builder)
 	{
 		base.build(builder);
+
+		if (this.PreviewBytes.Count > 0)
+		{
+			this.CadObject.Preview = this.PreviewBytes.ToArray();
+		}
 
 		if (builder.TryGetCadObject(this.LayoutHandle, out Layout layout))
 		{

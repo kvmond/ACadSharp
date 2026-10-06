@@ -940,15 +940,19 @@ internal abstract partial class DxfSectionWriterBase
 		this._writer.Write(43, mtext.VerticalHeight);
 
 		this._writer.Write(71, (short)mtext.ColumnData.ColumnType);
-		this._writer.Write(72, (short)mtext.ColumnData.ColumnCount);
+		this._writer.Write(72, mtext.ColumnData.ColumnType == ColumnType.DynamicColumns && !mtext.ColumnData.AutoHeight
+			? mtext.ColumnData.Heights.Count : mtext.ColumnData.ColumnCount);
 		this._writer.Write(44, mtext.ColumnData.Width);
 		this._writer.Write(45, mtext.ColumnData.Gutter);
 		this._writer.Write(73, mtext.ColumnData.AutoHeight ? (short)1 : (short)0);
 		this._writer.Write(74, mtext.ColumnData.FlowReversed ? (short)1 : (short)0);
 
-		foreach (double h in mtext.ColumnData.Heights)
+		if (mtext.ColumnData.ColumnType == ColumnType.DynamicColumns && !mtext.ColumnData.AutoHeight)
 		{
-			this._writer.Write(46, h);
+			foreach (double h in mtext.ColumnData.Heights)
+			{
+				this._writer.Write(46, h);
+			}
 		}
 	}
 

@@ -1586,7 +1586,8 @@ internal partial class DwgObjectWriter : DwgSectionIO
 		if (mtext.ColumnData.ColumnType != ColumnType.NoColumns)
 		{
 			//Column height count BL 72
-			this._writer.WriteBitLong(mtext.ColumnData.ColumnCount);
+			this._writer.WriteBitLong(mtext.ColumnData.ColumnType == ColumnType.DynamicColumns && !mtext.ColumnData.AutoHeight
+				? mtext.ColumnData.Heights.Count : mtext.ColumnData.ColumnCount);
 			//Columnn width BD 44
 			this._writer.WriteBitDouble(mtext.ColumnData.Width);
 			//Gutter BD 45
