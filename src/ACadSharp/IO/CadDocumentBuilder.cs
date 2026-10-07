@@ -35,6 +35,9 @@ internal abstract class CadDocumentBuilder
 
 	public LineTypesTable LineTypesTable { get; set; } = new LineTypesTable();
 
+	// Preserve DWG LTYPE_CONTROL indices independently of dictionary/table enumeration order.
+	public List<ulong> LineTypeEntryHandles { get; } = new List<ulong>();
+
 	public TextStylesTable TextStyles { get; set; } = new TextStylesTable();
 
 	public UCSTable UCSs { get; set; } = new UCSTable();

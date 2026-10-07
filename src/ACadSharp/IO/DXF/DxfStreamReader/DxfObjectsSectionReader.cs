@@ -2199,6 +2199,12 @@ internal class DxfObjectsSectionReader : DxfSectionReaderBase
 
 		switch (this._reader.Code)
 		{
+			case 62:
+				var color = new Color(this._reader.ValueAsShort);
+				var colorElement = tmp.ElementTemplates.LastOrDefault();
+				if (colorElement == null) mLineStyle.FillColor = color;
+				else colorElement.Element.Color = color;
+				return true;
 			case 6:
 				var t = tmp.ElementTemplates.LastOrDefault();
 				if (t == null)

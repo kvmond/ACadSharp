@@ -1,6 +1,5 @@
 ﻿using ACadSharp.Objects;
 using ACadSharp.Tables;
-using System.Linq;
 
 namespace ACadSharp.IO.Templates
 {
@@ -50,16 +49,10 @@ namespace ACadSharp.IO.Templates
 					}
 					else
 					{
-						try
-						{
-							//It can be assigned but is not checked
-							this.Element.LineType = builder.LineTypesTable.ElementAt(this.LinetypeIndex.Value);
-						}
-						catch (System.Exception ex)
-						{
-							//TODO: Implement get linetype by index
-							builder.Notify($"Linetype not assigned, index {LinetypeIndex}", NotificationType.Error, ex);
-						}
+						var index = this.LinetypeIndex.Value;
+						if (index >= 0 && index < builder.LineTypeEntryHandles.Count
+							&& builder.TryGetCadObject(builder.LineTypeEntryHandles[index], out lt)) this.Element.LineType = lt;
+						else builder.Notify($"Linetype not assigned, index {LinetypeIndex}", NotificationType.Error);
 					}
 				}
 			}

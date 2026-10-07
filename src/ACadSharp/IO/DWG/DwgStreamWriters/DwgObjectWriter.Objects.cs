@@ -1602,9 +1602,19 @@ internal partial class DwgObjectWriter : DwgSectionIO
 			//Before R2018:
 			else
 			{
-				//TODO: Fix the Linetype index for dwgReader and DwgWriter
-				//Ltindex BS Linetype index (yes, index)
-				this._writer.WriteBitShort(0);
+				// Reserved values represent ByLayer/ByBlock; ordinary indices follow the LTYPE_CONTROL order.
+				short index;
+				if (element.LineType.Name.Equals(Tables.LineType.ByLayerName, StringComparison.OrdinalIgnoreCase)) index = short.MaxValue;
+				else if (element.LineType.Name.Equals(Tables.LineType.ByBlockName, StringComparison.OrdinalIgnoreCase)) index = short.MaxValue - 1;
+				else
+				{
+					var entries = this._document.LineTypes.Where(t => !t.Name.Equals(Tables.LineType.ByLayerName, StringComparison.OrdinalIgnoreCase)
+						&& !t.Name.Equals(Tables.LineType.ByBlockName, StringComparison.OrdinalIgnoreCase)).ToArray();
+					var ordinal = Array.FindIndex(entries, t => t.Handle == element.LineType.Handle);
+					if (ordinal < 0 || ordinal >= short.MaxValue - 1) throw new InvalidDataException("MLINESTYLE linetype cannot be indexed.");
+					index = (short)ordinal;
+				}
+				this._writer.WriteBitShort(index);
 			}
 		}
 	}

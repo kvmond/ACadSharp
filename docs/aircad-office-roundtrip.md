@@ -31,3 +31,15 @@ App integration also checks edited/unedited verified saves with exact preview by
 all four new/inherited fit settings, first dimension in a document without Standard, strict rejection of other
 object/header differences, and existing header/code-page/reader patches. See the app's F2.2 stage record.
 Office AutoCAD 2025 reopen/AUDIT and the 13/31 business drawing copies are not available here and remain unverified.
+
+## S29 multiline patch — 2026-10-07
+
+`3.8.0-aircad.3` adds three focused fixes:
+
+- Preserve pre-R2018 MLINESTYLE element linetypes: write ByLayer/ByBlock reserved indices and ordinary LTYPE_CONTROL indices. Read ordinary indices through the original ordered control handles, independently of table dictionary enumeration.
+- Read DXF element colors into their element, keeping the earlier fill color separate.
+- Deep-copy MLINE vertex segment lists without clearing or sharing the original line/fill parameters.
+
+`MultilineRoundtripTests` covers all six supported DWG generations (R14, 2000, 2004, 2010, 2013, 2018), text/binary DXF, nonalphabetical custom linetype order, reserved linetypes, distinct element/fill colors, two saves and independent cloned parameters. The previous 12 office regression cases also pass. All 23 cases run from their original source linked into the Air CAD .NET 10/xUnit runner. The fork's net9/net48 runner was not run: the parent uses a different runner and the fork has no restored test assets on this machine.
+
+App verification includes 1,445 passed DWG tests (81 font-dependent skipped, 15 explicit not run), original AutoCAD sample comparisons, mixed MLINE style verified copies, native geometry/display/snaps and DXF conversion. AutoCAD reopen/AUDIT of newly written MLINE copies remains unverified; existing committed oracles are unchanged.

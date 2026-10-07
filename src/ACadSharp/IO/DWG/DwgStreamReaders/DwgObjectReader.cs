@@ -1775,7 +1775,7 @@ namespace ACadSharp.IO.DWG
 			return this.readDocumentTable(template);
 		}
 
-		private CadTemplate readDocumentTable<T>(CadTableTemplate<T> template)
+		private CadTemplate readDocumentTable<T>(CadTableTemplate<T> template, IList<ulong> orderedEntries = null)
 			where T : TableEntry
 		{
 			this.readCommonNonEntityData(template);
@@ -1786,8 +1786,12 @@ namespace ACadSharp.IO.DWG
 			//Layers: 	Numentries BL 70 Counts layer "0", too
 			int numentries = this._objectReader.ReadBitLong();
 			for (int i = 0; i < numentries; ++i)
+			{
 				//numentries handles in the file (soft owner)
-				template.EntryHandles.Add(this.handleReference());
+				var handle = this.handleReference();
+				template.EntryHandles.Add(handle);
+				orderedEntries?.Add(handle);
+			}
 
 			return template;
 		}
@@ -2876,7 +2880,7 @@ namespace ACadSharp.IO.DWG
 			CadTableTemplate<LineType> template = new CadTableTemplate<LineType>(
 				new LineTypesTable());
 
-			this.readDocumentTable(template);
+			this.readDocumentTable(template, this._builder.LineTypeEntryHandles);
 
 			//the linetypes, ending with BYLAYER and BYBLOCK.
 			//all are soft owner references except BYLAYER and
