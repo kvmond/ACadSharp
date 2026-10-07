@@ -3374,8 +3374,8 @@ namespace ACadSharp.IO.DWG
 			//Extrusion 3BD 210 etc.
 			mline.Normal = this._objectReader.Read3BitDouble();
 
-			//Openclosed BS open (1), closed(3)
-			mline.Flags |= this._objectReader.ReadBitShort() == 3 ? MLineFlags.Closed : MLineFlags.Has;
+			//Flags BS: vertex present, closed and suppressed start/end caps.
+			mline.Flags = (MLineFlags)this._objectReader.ReadBitShort();
 
 			//Linesinstyle RC 73
 			int nlines = (int)this._objectReader.ReadByte();

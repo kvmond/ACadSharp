@@ -885,7 +885,7 @@ internal partial class DwgObjectWriter : DwgSectionIO
 			//Isbylayerlt B 1 if bylayer linetype, else 0
 			bool isbylayerlt = entity.LineType.Name == LineType.ByLayerName;
 			this._writer.WriteBit(isbylayerlt);
-			if (isbylayerlt)
+			if (!isbylayerlt)
 				//6 [LTYPE (hard pointer)] (present if Isbylayerlt is 0)
 				this._writer.HandleReference(DwgReferenceType.HardPointer, entity.LineType);
 		}

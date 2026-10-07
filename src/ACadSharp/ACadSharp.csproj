@@ -19,7 +19,7 @@
 		<PackageReadmeFile>README.md</PackageReadmeFile>
 		<Version>3.8.0</Version>
 		<!-- Air CAD patched build: reports tell which library produced them. -->
-		<InformationalVersion>3.8.0-aircad.3</InformationalVersion>
+		<InformationalVersion>3.8.0-aircad.4</InformationalVersion>
 		<PackageOutputPath>../nupkg</PackageOutputPath>
 		<SignAssembly>True</SignAssembly>
 		<AssemblyOriginatorKeyFile>../ACadSharp.snk</AssemblyOriginatorKeyFile>

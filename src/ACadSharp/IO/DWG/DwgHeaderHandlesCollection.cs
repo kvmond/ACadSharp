@@ -1,5 +1,6 @@
 ﻿using ACadSharp.Header;
 using ACadSharp.Tables;
+using ACadSharp.Objects;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 
@@ -87,9 +88,9 @@ namespace ACadSharp.IO.DWG
 				header.CurrentLineTypeName = entry.Name;
 			}
 
-			if (builder.TryGetCadObject(this.CMLSTYLE, out entry))
+			if (builder.TryGetCadObject<MLineStyle>(this.CMLSTYLE, out var multilineStyle))
 			{
-				header.CurrentMLineStyleName = entry.Name;
+				header.CurrentMLineStyleName = multilineStyle.Name;
 			}
 
 			if (builder.TryGetCadObject(this.TEXTSTYLE, out entry))

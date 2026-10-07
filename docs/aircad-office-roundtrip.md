@@ -43,3 +43,13 @@ Office AutoCAD 2025 reopen/AUDIT and the 13/31 business drawing copies are not a
 `MultilineRoundtripTests` covers all six supported DWG generations (R14, 2000, 2004, 2010, 2013, 2018), text/binary DXF, nonalphabetical custom linetype order, reserved linetypes, distinct element/fill colors, two saves and independent cloned parameters. The previous 12 office regression cases also pass. All 23 cases run from their original source linked into the Air CAD .NET 10/xUnit runner. The fork's net9/net48 runner was not run: the parent uses a different runner and the fork has no restored test assets on this machine.
 
 App verification includes 1,445 passed DWG tests (81 font-dependent skipped, 15 explicit not run), original AutoCAD sample comparisons, mixed MLINE style verified copies, native geometry/display/snaps and DXF conversion. AutoCAD reopen/AUDIT of newly written MLINE copies remains unverified; existing committed oracles are unchanged.
+
+### S29 creation integration follow-up
+
+`3.8.0-aircad.4` fixes three defects exposed by native creation and extended round trips:
+
+- Resolve the DWG CMLSTYLE header handle as MLineStyle, not TableEntry. A custom current style now survives reading and DXF-to-DWG conversion.
+- Read/write the complete MLINE flag word, retaining Has, Closed and suppressed start/end caps. The former reader dropped Has on closed entities and the writer dropped cap suppression. This matches the bit-short flags field in the primary LibreDWG `src/dwg.spec` MLINE definition.
+- In R13/R14 common entity data, emit the linetype handle only when IsByLayer is false. The reversed condition corrupted following handles and lost entities in multi-object R14 tests.
+
+Review kept these fixes at their serialization boundaries; no round-trip check was weakened. `MultilineRoundtripTests` now covers all five flag combinations, both current-style settings, ByLayer/ByBlock/custom entity linetypes and stable style references across two generations in all previously covered formats. All 11 cases pass through the same linked .NET 10 runner; 18 checks including library version and project reference rules pass. The app-wide DWG run had 1,432 passed, 18 failed (case-only MLINE style name comparisons), 81 font skips and 15 explicit not run. Those 18 were fixed with a narrowly case-insensitive name comparison and a test that a different style still reports loss; the affected 267 tests pass. App UI and MCP creation, approval, rollback, Undo/Redo and two-generation verified saves pass. New AutoCAD reopen/AUDIT remains unverified.

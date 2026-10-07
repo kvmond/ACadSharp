@@ -1420,8 +1420,8 @@ internal partial class DwgObjectWriter : DwgSectionIO
 		//Extrusion 3BD 210 etc.
 		this._writer.Write3BitDouble(mline.Normal);
 
-		//Openclosed BS open (1), closed(3)
-		this._writer.WriteBitShort((short)(mline.Flags.HasFlag(MLineFlags.Closed) ? 3 : 1));
+		//Preserve all native flags, including suppressed start/end caps.
+		this._writer.WriteBitShort((short)mline.Flags);
 
 		int nlines = 0;
 		if (mline.Vertices.Count > 0)
