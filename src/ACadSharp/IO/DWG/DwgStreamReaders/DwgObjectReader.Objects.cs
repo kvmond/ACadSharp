@@ -963,13 +963,26 @@ internal partial class DwgObjectReader : DwgSectionIO
 
 	private CadTemplate readMTextAttributeObjectContextData()
 	{
-		//TODO: MTextAttributeObjectContextData for dwg
+		// Only the non-embedded AC1032 form has been checked against original records.
+		if (this._version != ACadVersion.AC1032)
+			return null;
 		MTextAttributeObjectContextData contextData = new();
 		CadAnnotScaleObjectContextDataTemplate template = new CadAnnotScaleObjectContextDataTemplate(contextData);
 
-		//this.readAnnotScaleObjectContextData(template);
+		this.readAnnotScaleObjectContextData(template);
+		if (contextData.Version != 3 && contextData.Version != 4)
+			throw new NotSupportedException("Unsupported multiline attribute context version.");
+		contextData.AttachmentPoint = (ACadSharp.Entities.AttachmentPointType)this._objectReader.ReadBitShort();
+		contextData.Rotation = this._objectReader.ReadBitDouble();
+		var insertion = this._objectReader.Read2RawDouble();
+		var alignment = this._objectReader.Read2RawDouble();
+		contextData.InsertPoint = new(insertion.X, insertion.Y, 0);
+		contextData.AlignmentPoint = new(alignment.X, alignment.Y, 0);
+		contextData.Value290 = this._objectReader.ReadBit();
+		if (contextData.Value290)
+			throw new NotSupportedException("Embedded multiline attribute context data is not supported.");
 
-		return null;
+		return template;
 	}
 
 	private void readObjectContextData(CadTemplate template)

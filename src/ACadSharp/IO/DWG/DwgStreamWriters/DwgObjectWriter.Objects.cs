@@ -50,8 +50,6 @@ internal partial class DwgObjectWriter : DwgSectionIO
 			case AecCleanupGroup:
 			case AecBinRecord:
 			case DimensionAssociation:
-			//Its DWG form is not implemented (the DWG reader does not read it either); a DXF reads it.
-			case MTextAttributeObjectContextData:
 			case UnknownNonGraphicalObject:
 			case VisualStyle:
 			case ProxyObject:
@@ -1625,7 +1623,28 @@ internal partial class DwgObjectWriter : DwgSectionIO
 
 	private void writeMTextAttributeObjectContextData(MTextAttributeObjectContextData mtextContextData)
 	{
-		throw new NotImplementedException();
+		if (mtextContextData.Scale.Document != this._document
+			|| !ReferenceEquals(this._document.GetCadObject(mtextContextData.Scale.Handle), mtextContextData.Scale))
+			throw new InvalidDataException("Multiline attribute context SCALE must be registered in its document.");
+		if (this._version != ACadVersion.AC1032 || mtextContextData.Value290
+			|| (mtextContextData.Version != 3 && mtextContextData.Version != 4)
+			|| mtextContextData.InsertPoint.Z != 0 || mtextContextData.AlignmentPoint.Z != 0)
+			throw new NotSupportedException("Only planar, non-embedded AC1032 multiline attribute contexts are supported.");
+		foreach (double value in new[] { mtextContextData.Rotation, mtextContextData.InsertPoint.X, mtextContextData.InsertPoint.Y,
+			mtextContextData.AlignmentPoint.X, mtextContextData.AlignmentPoint.Y })
+			if (double.IsNaN(value) || double.IsInfinity(value))
+				throw new InvalidOperationException("Multiline attribute context coordinates must be finite.");
+		// The original form has no HasFileToExtensionDictionary bit and stores raw XY pairs.
+		this._writer.WriteBitShort(mtextContextData.Version);
+		this._writer.WriteBit(mtextContextData.Default);
+		this._writer.HandleReference(DwgReferenceType.HardPointer, mtextContextData.Scale);
+		this._writer.WriteBitShort((short)mtextContextData.AttachmentPoint);
+		this._writer.WriteBitDouble(mtextContextData.Rotation);
+		this._writer.WriteRawDouble(mtextContextData.InsertPoint.X);
+		this._writer.WriteRawDouble(mtextContextData.InsertPoint.Y);
+		this._writer.WriteRawDouble(mtextContextData.AlignmentPoint.X);
+		this._writer.WriteRawDouble(mtextContextData.AlignmentPoint.Y);
+		this._writer.WriteBit(false);
 	}
 
 	private void writeMultiLeaderAnnotContext(MultiLeaderObjectContextData multiLeaderAnnotContext)

@@ -20,5 +20,10 @@ internal class CadAnnotScaleObjectContextDataTemplate : CadNonGraphicalObjectTem
 		{
 			contextData.Scale = scale;
 		}
+		else if (contextData is MTextAttributeObjectContextData)
+		{
+			const string message = "Multiline attribute context refers to a missing or invalid SCALE.";
+			builder.Notify(message, NotificationType.Error, new System.IO.InvalidDataException(message));
+		}
 	}
 }

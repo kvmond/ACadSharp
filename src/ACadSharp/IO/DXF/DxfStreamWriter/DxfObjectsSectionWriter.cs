@@ -1630,16 +1630,24 @@ internal class DxfObjectsSectionWriter : DxfSectionWriterBase
 
 	private void writeMTextAttributeObjectContextData(MTextAttributeObjectContextData contextData)
 	{
+		if (contextData.Scale.Document != this._document
+			|| !ReferenceEquals(this._document.GetCadObject(contextData.Scale.Handle), contextData.Scale))
+			throw new System.IO.InvalidDataException("Multiline attribute context SCALE must be registered in its document.");
+		if (contextData.Value290)
+			throw new NotSupportedException("Embedded multiline attribute context data is not supported.");
 		DxfClassMap map = DxfClassMap.Create<MTextAttributeObjectContextData>();
 
+		this._writer.Write(100, DxfSubclassMarker.ObjectContextData);
+		this._writer.Write(70, contextData.Version);
+		this._writer.Write(290, contextData.Default);
 		this.writeAnnotScaleObjectContextData(contextData);
 
 		this._writer.Write(70, contextData.AttachmentPoint, map);
 
 		this._writer.Write(50, contextData.Rotation, map);
 
-		this._writer.Write(10, contextData.AlignmentPoint, map);
-		this._writer.Write(11, contextData.InsertPoint, map);
+		this._writer.Write(10, contextData.InsertPoint, map);
+		this._writer.Write(11, contextData.AlignmentPoint, map);
 
 		this._writer.Write(290, contextData.Value290, map);
 	}
