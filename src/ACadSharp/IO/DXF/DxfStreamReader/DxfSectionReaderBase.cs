@@ -34,13 +34,13 @@ internal abstract class DxfSectionReaderBase
 
 	public abstract void Read();
 
-	protected void readCommonObjectData(out string name, out ulong handle, out ulong? ownerHandle, out ulong? xdictHandle, out HashSet<ulong> reactors)
+	protected void readCommonObjectData(out string name, out ulong handle, out ulong? ownerHandle, out ulong? xdictHandle, out List<ulong> reactors)
 	{
 		name = null;
 		handle = 0;
 		ownerHandle = null;
 		xdictHandle = null;
-		reactors = new HashSet<ulong>();
+		reactors = new List<ulong>();
 
 		if (this._reader.DxfCode == DxfCode.Start
 				|| this._reader.DxfCode == DxfCode.Subclass)
@@ -63,7 +63,9 @@ internal abstract class DxfSectionReaderBase
 					break;
 				//Start of application - defined group
 				case 102:
-					this.readDefinedGroups(out xdictHandle, out reactors);
+					this.readDefinedGroups(out ulong? dictionary, out List<ulong> groupReactors);
+					if (dictionary.HasValue) xdictHandle = dictionary;
+					reactors.AddRange(groupReactors);
 					break;
 				//Soft - pointer ID / handle to owner BLOCK_RECORD object
 				case 330:
@@ -252,7 +254,8 @@ internal abstract class DxfSectionReaderBase
 
 				do
 				{
-					if (unknownEntityTemplate != null && this._builder.KeepUnknownEntities)
+					// Retain common identity even when the configured builder excludes this unknown object.
+					if (unknownEntityTemplate != null)
 					{
 						this.readCommonEntityCodes(unknownEntityTemplate, out bool isExtendedData, map);
 						if (isExtendedData)
@@ -612,7 +615,7 @@ internal abstract class DxfSectionReaderBase
 		CadValueTemplate template = new(value);
 		var map = DxfClassMap.Create(value.GetType(), "CadValue");
 
-		while (this._reader.Code != 304)
+		while (this._reader.Code != 304 && this._reader.DxfCode != DxfCode.Start)
 		{
 			switch (this._reader.Code)
 			{
@@ -668,6 +671,10 @@ internal abstract class DxfSectionReaderBase
 			this._reader.ReadNext();
 		}
 
+		if (this._reader.DxfCode == DxfCode.Start)
+		{
+			this._builder.Notify("CadValue data was not fully interpreted; the following object boundary was preserved.", NotificationType.NotImplemented);
+		}
 		return template;
 	}
 
@@ -1844,11 +1851,14 @@ internal abstract class DxfSectionReaderBase
 				case DxfCode.ExtendedDataLayerName:
 					if (this._builder.Layers.TryGetValue(this._reader.ValueAsString, out Layer layer))
 					{
-						record = new ExtendedDataLayer(layer.Handle);
+						var layerRecord = new ExtendedDataLayer(layer.Handle);
+						this._builder.XDataLayers.Add((layerRecord, layer));
+						record = layerRecord;
 					}
 					else
 					{
-						this._builder.Notify($"[XData] Could not found the linked Layer {this._reader.ValueAsString}.", NotificationType.Warning);
+						string message = $"[XData] Could not find the linked Layer {this._reader.ValueAsString}.";
+						this._builder.Notify(message, NotificationType.Error, new System.IO.InvalidDataException(message));
 					}
 					break;
 				case DxfCode.ExtendedDataBinaryChunk:
@@ -2323,19 +2333,19 @@ internal abstract class DxfSectionReaderBase
 
 	private void readDefinedGroups(CadTemplate template)
 	{
-		this.readDefinedGroups(out ulong? xdict, out HashSet<ulong> reactorsHandles);
+		this.readDefinedGroups(out ulong? xdict, out List<ulong> reactorsHandles);
 
 		if (xdict.HasValue)
 		{
 			template.XDictHandle = xdict;
 		}
-		template.ReactorsHandles.UnionWith(reactorsHandles);
+		template.ReactorsHandles.AddRange(reactorsHandles);
 	}
 
-	private void readDefinedGroups(out ulong? xdictHandle, out HashSet<ulong> reactors)
+	private void readDefinedGroups(out ulong? xdictHandle, out List<ulong> reactors)
 	{
 		xdictHandle = null;
-		reactors = new HashSet<ulong>();
+		reactors = new List<ulong>();
 
 		switch (this._reader.ValueAsString)
 		{
@@ -2359,9 +2369,9 @@ internal abstract class DxfSectionReaderBase
 		}
 	}
 
-	private HashSet<ulong> readReactors()
+	private List<ulong> readReactors()
 	{
-		HashSet<ulong> reactors = new();
+		List<ulong> reactors = new();
 
 		this._reader.ReadNext();
 

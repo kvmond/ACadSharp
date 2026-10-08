@@ -356,7 +356,7 @@ namespace ACadSharp.IO
 		{
 			this._reader = this._reader ?? this.getReader();
 
-			this._builder = new DxfDocumentBuilder(this._version, this._document, this.Configuration);
+			this._builder = new DxfDocumentBuilder(this._version, this._document, this.Configuration) { IsPartialRead = true };
 			this._builder.OnNotification += this.onNotificationEvent;
 
 			this.readTables();
@@ -381,7 +381,7 @@ namespace ACadSharp.IO
 		{
 			this._reader = this._reader ?? this.getReader();
 
-			this._builder = new DxfDocumentBuilder(this._version, this._document, this.Configuration);
+			this._builder = new DxfDocumentBuilder(this._version, this._document, this.Configuration) { IsPartialRead = true };
 			this._builder.OnNotification += this.onNotificationEvent;
 
 			this.readEntities();

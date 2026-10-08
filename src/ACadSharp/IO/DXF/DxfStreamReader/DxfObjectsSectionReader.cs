@@ -828,6 +828,13 @@ internal class DxfObjectsSectionReader : DxfSectionReaderBase
 		}
 	}
 
+	private bool atTableObjectBoundary(string context)
+	{
+		if (this._reader.DxfCode != DxfCode.Start) return false;
+		this._builder.Notify($"Nested TABLECONTENT data was not fully interpreted at {context}; the following object boundary was preserved.", NotificationType.NotImplemented);
+		return true;
+	}
+
 	private TableEntity.Cell readCell()
 	{
 		this._reader.ReadNext();
@@ -859,6 +866,8 @@ internal class DxfObjectsSectionReader : DxfSectionReaderBase
 			{
 				return cell;
 			}
+
+			if (this.atTableObjectBoundary(nameof(readCell))) break;
 
 			this._reader.ReadNext();
 		}
@@ -902,6 +911,8 @@ internal class DxfObjectsSectionReader : DxfSectionReaderBase
 			{
 				break;
 			}
+
+			if (this.atTableObjectBoundary(nameof(readCellContent))) break;
 
 			this._reader.ReadNext();
 		}
@@ -959,6 +970,8 @@ internal class DxfObjectsSectionReader : DxfSectionReaderBase
 				break;
 			}
 
+			if (this.atTableObjectBoundary(nameof(readCellMargin))) break;
+
 			this._reader.ReadNext();
 		}
 	}
@@ -970,7 +983,7 @@ internal class DxfObjectsSectionReader : DxfSectionReaderBase
 		this._reader.ReadNext();
 
 		bool end = false;
-		while (this._reader.Code != 1)
+		while (this._reader.Code != 1 && this._reader.DxfCode != DxfCode.Start)
 		{
 			switch (this._reader.Code)
 			{
@@ -989,6 +1002,8 @@ internal class DxfObjectsSectionReader : DxfSectionReaderBase
 			{
 				break;
 			}
+
+			if (this.atTableObjectBoundary(nameof(readCellStyle))) break;
 
 			this._reader.ReadNext();
 		}
@@ -1023,6 +1038,8 @@ internal class DxfObjectsSectionReader : DxfSectionReaderBase
 			{
 				break;
 			}
+
+			if (this.atTableObjectBoundary(nameof(readCellTableFormat))) break;
 
 			this._reader.ReadNext();
 		}
@@ -1061,6 +1078,8 @@ internal class DxfObjectsSectionReader : DxfSectionReaderBase
 				break;
 			}
 
+			if (this.atTableObjectBoundary(nameof(readContentFormat))) break;
+
 			this._reader.ReadNext();
 		}
 	}
@@ -1098,6 +1117,8 @@ internal class DxfObjectsSectionReader : DxfSectionReaderBase
 			{
 				break;
 			}
+
+			if (this.atTableObjectBoundary(nameof(readCustomData))) break;
 
 			this._reader.ReadNext();
 		}
@@ -1145,6 +1166,8 @@ internal class DxfObjectsSectionReader : DxfSectionReaderBase
 			{
 				break;
 			}
+
+			if (this.atTableObjectBoundary(nameof(readDataMapValue))) break;
 
 			this._reader.ReadNext();
 		}
@@ -1463,6 +1486,8 @@ internal class DxfObjectsSectionReader : DxfSectionReaderBase
 				break;
 			}
 
+			if (this.atTableObjectBoundary(nameof(readFormattedCellContent))) break;
+
 			this._reader.ReadNext();
 		}
 	}
@@ -1497,6 +1522,8 @@ internal class DxfObjectsSectionReader : DxfSectionReaderBase
 				break;
 			}
 
+			if (this.atTableObjectBoundary(nameof(readFormattedTableCell))) break;
+
 			this._reader.ReadNext();
 		}
 	}
@@ -1527,6 +1554,8 @@ internal class DxfObjectsSectionReader : DxfSectionReaderBase
 			{
 				break;
 			}
+
+			if (this.atTableObjectBoundary(nameof(readFormattedTableColumn))) break;
 
 			this._reader.ReadNext();
 		}
@@ -1590,6 +1619,8 @@ internal class DxfObjectsSectionReader : DxfSectionReaderBase
 					break;
 			}
 
+			if (this.atTableObjectBoundary(nameof(readFormattedTableDataSubclass))) break;
+
 			this._reader.ReadNext();
 		}
 	}
@@ -1620,6 +1651,8 @@ internal class DxfObjectsSectionReader : DxfSectionReaderBase
 			{
 				break;
 			}
+
+			if (this.atTableObjectBoundary(nameof(readFormattedTableRow))) break;
 
 			this._reader.ReadNext();
 		}
@@ -1774,6 +1807,8 @@ internal class DxfObjectsSectionReader : DxfSectionReaderBase
 				break;
 			}
 
+			if (this.atTableObjectBoundary(nameof(readGridFormat))) break;
+
 			this._reader.ReadNext();
 		}
 	}
@@ -1874,6 +1909,8 @@ internal class DxfObjectsSectionReader : DxfSectionReaderBase
 				break;
 			}
 
+			if (this.atTableObjectBoundary(nameof(readLinkedTableCell))) break;
+
 			this._reader.ReadNext();
 		}
 	}
@@ -1910,6 +1947,8 @@ internal class DxfObjectsSectionReader : DxfSectionReaderBase
 			{
 				break;
 			}
+
+			if (this.atTableObjectBoundary(nameof(readLinkedTableCellContent))) break;
 
 			this._reader.ReadNext();
 		}
@@ -1953,6 +1992,8 @@ internal class DxfObjectsSectionReader : DxfSectionReaderBase
 				break;
 			}
 
+			if (this.atTableObjectBoundary(nameof(readLinkedTableColumn))) break;
+
 			this._reader.ReadNext();
 		}
 	}
@@ -1993,6 +2034,8 @@ internal class DxfObjectsSectionReader : DxfSectionReaderBase
 					break;
 			}
 
+			if (this.atTableObjectBoundary(nameof(readLinkedTableDataSubclass))) break;
+
 			this._reader.ReadNext();
 		}
 	}
@@ -2031,6 +2074,8 @@ internal class DxfObjectsSectionReader : DxfSectionReaderBase
 			{
 				break;
 			}
+
+			if (this.atTableObjectBoundary(nameof(readLinkedTableRow))) break;
 
 			this._reader.ReadNext();
 		}
@@ -2368,7 +2413,8 @@ internal class DxfObjectsSectionReader : DxfSectionReaderBase
 
 				do
 				{
-					if (unknownEntityTemplate != null && this._builder.KeepUnknownEntities)
+					// Retain common identity even when the configured builder excludes this unknown object.
+					if (unknownEntityTemplate != null)
 					{
 						this.readCommonCodes(unknownEntityTemplate, out bool isExtendedData, map);
 						if (isExtendedData)
@@ -2772,6 +2818,8 @@ internal class DxfObjectsSectionReader : DxfSectionReaderBase
 				break;
 			}
 
+			if (this.atTableObjectBoundary(nameof(readStyleOverride))) break;
+
 			this._reader.ReadNext();
 		}
 	}
@@ -2810,6 +2858,8 @@ internal class DxfObjectsSectionReader : DxfSectionReaderBase
 				break;
 			}
 
+			if (this.atTableObjectBoundary(nameof(readTableCell))) break;
+
 			this._reader.ReadNext();
 		}
 	}
@@ -2844,6 +2894,8 @@ internal class DxfObjectsSectionReader : DxfSectionReaderBase
 			{
 				return column;
 			}
+
+			if (this.atTableObjectBoundary(nameof(readTableColumn))) break;
 
 			this._reader.ReadNext();
 		}
@@ -2883,6 +2935,8 @@ internal class DxfObjectsSectionReader : DxfSectionReaderBase
 			{
 				break;
 			}
+
+			if (this.atTableObjectBoundary(nameof(readTableColumn))) break;
 
 			this._reader.ReadNext();
 		}
@@ -2935,6 +2989,8 @@ internal class DxfObjectsSectionReader : DxfSectionReaderBase
 					break;
 			}
 
+			if (this.atTableObjectBoundary(nameof(readTableContentSubclass))) break;
+
 			this._reader.ReadNext();
 		}
 	}
@@ -2970,6 +3026,8 @@ internal class DxfObjectsSectionReader : DxfSectionReaderBase
 				return row;
 			}
 
+			if (this.atTableObjectBoundary(nameof(readTableRow))) break;
+
 			this._reader.ReadNext();
 		}
 
@@ -3003,6 +3061,8 @@ internal class DxfObjectsSectionReader : DxfSectionReaderBase
 			{
 				break;
 			}
+
+			if (this.atTableObjectBoundary(nameof(readTableRow))) break;
 
 			this._reader.ReadNext();
 		}

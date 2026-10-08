@@ -72,7 +72,12 @@ namespace ACadSharp.Objects
 		/// Add an entity to the group.
 		/// </summary>
 		/// <param name="entity"></param>
-		public void Add(Entity entity)
+		public void Add(Entity entity) => this.add(entity, true);
+
+		// Reading membership must not synthesize or deduplicate the reactor sequence stored in the file.
+		internal void AddFromFile(Entity entity) => this.add(entity, false);
+
+		private void add(Entity entity, bool addReactor)
 		{
 			if (this.Document != entity.Document)
 			{
@@ -80,7 +85,7 @@ namespace ACadSharp.Objects
 			}
 
 			this._entities.Add(entity);
-			entity.AddReactor(this);
+			if (addReactor) entity.AddReactor(this);
 		}
 
 		/// <summary>

@@ -21,7 +21,7 @@ internal abstract class CadTemplate : ICadObjectTemplate
 
 	public ulong? OwnerHandle { get; set; }
 
-	public HashSet<ulong> ReactorsHandles { get; set; } = new();
+	public List<ulong> ReactorsHandles { get; set; } = new();
 
 	public ulong? XDictHandle { get; set; }
 
@@ -83,9 +83,21 @@ internal abstract class CadTemplate : ICadObjectTemplate
 			{
 				this.CadObject.AddReactor(reactor);
 			}
+			else if (builder.TryGetObjectTemplate(handle, out ICadObjectTemplate template)
+				&& (template.CadObject is UnknownEntity && !builder.KeepUnknownEntities
+					|| template.CadObject is UnknownNonGraphicalObject && !builder.KeepUnknownNonGraphicalObjects))
+			{
+				// Respect the explicit lossy reader configuration; a genuinely missing handle remains an error.
+				builder.Notify($"Reactor with handle {handle} was excluded by the reader configuration", NotificationType.Warning);
+			}
+			else if (builder.IsPartialRead)
+			{
+				builder.Notify($"Reactor with handle {handle} was not loaded by the partial read", NotificationType.Warning);
+			}
 			else
 			{
-				builder.Notify($"Reactor with handle {handle} not found", NotificationType.Warning);
+				string message = $"Reactor with handle {handle} not found";
+				builder.Notify(message, NotificationType.Error, new System.IO.InvalidDataException(message));
 			}
 		}
 

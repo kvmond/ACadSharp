@@ -55,7 +55,7 @@ internal class DxfTablesSectionReader : DxfSectionReaderBase
 		CadTemplate template = null;
 		Dictionary<string, List<ExtendedDataRecord>> edata = new();
 
-		this.readCommonObjectData(out string name, out ulong handle, out ulong? ownerHandle, out ulong? xdictHandle, out HashSet<ulong> reactors);
+		this.readCommonObjectData(out string name, out ulong handle, out ulong? ownerHandle, out ulong? xdictHandle, out List<ulong> reactors);
 
 		if (this._reader.DxfCode == DxfCode.Subclass)
 		{

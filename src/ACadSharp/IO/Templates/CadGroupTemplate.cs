@@ -5,7 +5,7 @@ namespace ACadSharp.IO.Templates
 {
 	internal class CadGroupTemplate : CadTemplate<Group>
 	{
-		public HashSet<ulong> Handles { get; set; } = new();
+		public List<ulong> Handles { get; set; } = new();
 
 		public CadGroupTemplate() : base(new Group()) { }
 
@@ -23,7 +23,7 @@ namespace ACadSharp.IO.Templates
 
 					try
 					{
-						this.CadObject.Add(e.CadObject);
+						this.CadObject.AddFromFile(e.CadObject);
 					}
 					catch (System.Exception ex)
 					{

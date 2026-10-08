@@ -187,8 +187,20 @@ public abstract class CadWipeoutBase : Entity
 		get { return this._definitionReactor; }
 		set
 		{
+			if (value != null && value.Document != null && value.Document != this.Document)
+			{
+				throw new ArgumentException("The image reactor belongs to another document.", nameof(value));
+			}
 			this._definitionReactor = value;
-			this._definitionReactor.Owner = this;
+			if (value != null)
+			{
+				value.Owner = this;
+				value.Image = this as RasterImage;
+				if (this.Document != null && value.Document == null)
+				{
+					this.Document.AddCadObject(value);
+				}
+			}
 		}
 	}
 
@@ -218,6 +230,7 @@ public abstract class CadWipeoutBase : Entity
 		CadWipeoutBase clone = (CadWipeoutBase)base.Clone();
 
 		clone.Definition = (ImageDefinition)this.Definition?.Clone();
+		clone.DefinitionReactor = (ImageDefinitionReactor)this.DefinitionReactor?.Clone();
 
 		return clone;
 	}
@@ -262,10 +275,19 @@ public abstract class CadWipeoutBase : Entity
 		base.AssignDocument(doc);
 
 		this._definition = this.updateCollectionEntry(this.Definition, d => this._definition = d, doc.ImageDefinitions);
+		if (this.DefinitionReactor != null && this.DefinitionReactor.Document == null)
+		{
+			doc.AddCadObject(this.DefinitionReactor);
+		}
 	}
 
 	internal override void UnassignDocument()
 	{
+		if (this.DefinitionReactor != null)
+		{
+			this.Definition?.RemoveReactor(this.DefinitionReactor);
+			this.Document.RemoveCadObject(this.DefinitionReactor);
+		}
 		base.UnassignDocument();
 
 		this._definition = (ImageDefinition)this.Definition?.Clone();

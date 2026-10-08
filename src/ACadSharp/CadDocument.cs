@@ -605,21 +605,10 @@ public class CadDocument : IHandledCadObject
 	}
 
 	/// <summary>
-	/// Updates the image definition reactors for all raster images in the current collection.
+	/// Registers missing image definition reactors while preserving existing identities and order.
 	/// </summary>
-	/// <remarks>
-	/// This method removes existing <see cref="ImageDefinitionReactor"/> instances from the document
-	/// and creates new reactors for each <see cref="RasterImage"/>. The new reactors are associated with their
-	/// corresponding image definitions and added to the document.
-	/// </remarks>
 	public void UpdateImageReactors()
 	{
-		var reactors = this._cadObjects.Values.OfType<ImageDefinitionReactor>().ToList();
-		foreach (var item in reactors)
-		{
-			this._cadObjects.Remove(item.Handle);
-		}
-
 		var values = this._cadObjects.Values.OfType<RasterImage>().ToList();
 		foreach (RasterImage image in values)
 		{
@@ -628,9 +617,14 @@ public class CadDocument : IHandledCadObject
 				continue;
 			}
 
-			image.DefinitionReactor = new ImageDefinitionReactor(image);
-			this.AddCadObject(image.DefinitionReactor);
-			image.Definition.AddReactor(image.DefinitionReactor);
+			if (image.DefinitionReactor == null)
+			{
+				image.DefinitionReactor = new ImageDefinitionReactor(image);
+			}
+			if (!image.Definition.Reactors.Contains(image.DefinitionReactor))
+			{
+				image.Definition.AddReactor(image.DefinitionReactor);
+			}
 		}
 	}
 

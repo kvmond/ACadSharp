@@ -111,7 +111,8 @@ internal abstract partial class DxfSectionWriterBase
 			this.Holder.Objects.Enqueue(cadObject.XDictionary);
 		}
 
-		cadObject.CleanReactors();
+		if (cadObject.Reactors.Any(r => r == null || !ReferenceEquals(r.Document, cadObject.Document)))
+			throw new System.IO.InvalidDataException($"Object {cadObject.Handle:X} has a foreign or detached reactor; writing would lose the reference.");
 		if (cadObject.Reactors.Any())
 		{
 			this._writer.Write(DxfCode.ControlString, DxfFileToken.ReactorsToken);
@@ -173,13 +174,15 @@ internal abstract partial class DxfSectionWriterBase
 					case ExtendedDataWorldCoordinate wcoord:
 						this._writer.Write(wcoord.Code, (IVector)wcoord.Value);
 						break;
+					case ExtendedDataLayer layer:
+						var referencedLayer = layer.ResolveReference(this._document);
+						if (referencedLayer == null)
+							throw new System.IO.InvalidDataException($"XDATA layer reference {layer.Value:X} is not a registered layer.");
+						this._writer.Write(DxfCode.ExtendedDataLayerName, referencedLayer.Name);
+						break;
 					case IExtendedDataHandleReference handle:
-						ulong h = handle.Value;
-						if (handle.ResolveReference(this._document) == null)
-						{
-							h = 0;
-						}
-						this._writer.Write(DxfCode.ExtendedDataHandle, h);
+						// A raw 1005 value may be unresolved; serialization must not silently repair it to zero.
+						this._writer.Write(DxfCode.ExtendedDataHandle, handle.Value);
 						break;
 					case ExtendedDataString str:
 						this._writer.Write(str.Code, str.Value);

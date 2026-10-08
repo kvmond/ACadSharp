@@ -1127,13 +1127,14 @@ internal partial class DwgObjectWriter : DwgSectionIO
 						mstream.Write(LittleEndianConverter.Instance.GetBytes(wcoord.Value.Y), 0, 8);
 						mstream.Write(LittleEndianConverter.Instance.GetBytes(wcoord.Value.Z), 0, 8);
 						break;
+					case ExtendedDataLayer layer:
+						if (layer.ResolveReference(this._document) == null)
+							throw new InvalidDataException($"XDATA layer reference {layer.Value:X} is not a registered layer.");
+						mstream.Write(BigEndianConverter.Instance.GetBytes(layer.Value), 0, 8);
+						break;
 					case IExtendedDataHandleReference handle:
-						ulong h = handle.Value;
-						if (handle.ResolveReference(this._document) == null)
-						{
-							h = 0;
-						}
-						mstream.Write(BigEndianConverter.Instance.GetBytes(h), 0, 8);
+						// Preserve the stored value. Nulling a dangling handle is an AUDIT repair, not serialization.
+						mstream.Write(BigEndianConverter.Instance.GetBytes(handle.Value), 0, 8);
 						break;
 					case ExtendedDataString str:
 						//same as ReadTextUnicode()
@@ -1322,7 +1323,8 @@ internal partial class DwgObjectWriter : DwgSectionIO
 	private void writeReactorsAndDictionaryHandle(CadObject cadObject)
 	{
 		//Numreactors S number of reactors in this object
-		cadObject.CleanReactors();
+		if (cadObject.Reactors.Any(r => r == null || !ReferenceEquals(r.Document, cadObject.Document)))
+			throw new InvalidDataException($"Object {cadObject.Handle:X} has a foreign or detached reactor; writing would lose the reference.");
 
 		this._writer.WriteBitLong(cadObject.Reactors.Count());
 		foreach (var item in cadObject.Reactors)

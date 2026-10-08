@@ -2,6 +2,7 @@
 using ACadSharp.IO.Templates;
 using ACadSharp.Objects;
 using ACadSharp.Tables;
+using ACadSharp.XData;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -17,6 +18,9 @@ internal class DxfDocumentBuilder : CadDocumentBuilder
 	public Dictionary<ulong, byte[]> AcdsDataRecords { get; } = new();
 
 	public DxfReaderConfiguration Configuration { get; }
+
+	// R12 table entries can acquire handles only when the tables join the document.
+	public List<(ExtendedDataLayer Record, Layer Layer)> XDataLayers { get; } = new();
 
 	public override bool IgnoreProxyGraphics => true;
 
@@ -63,6 +67,11 @@ internal class DxfDocumentBuilder : CadDocumentBuilder
 		this.RegisterTables();
 
 		this.BuildTables();
+
+		foreach (var reference in this.XDataLayers)
+		{
+			reference.Record.Value = reference.Layer.Handle;
+		}
 
 		this.buildDictionaries();
 

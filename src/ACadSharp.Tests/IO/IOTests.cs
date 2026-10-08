@@ -1,5 +1,8 @@
 ﻿using ACadSharp.Entities;
 using ACadSharp.IO;
+using ACadSharp.Tables;
+using ACadSharp.XData;
+using System.Linq;
 using ACadSharp.Tests.TestModels;
 using System.Collections.Generic;
 using System.IO;
@@ -23,14 +26,7 @@ public class IOTests : IOTestsBase
 		CadDocument transfer = new CadDocument();
 		transfer.Header.Version = doc.Header.Version;
 
-		List<Entity> entities = new List<Entity>(doc.Entities);
-		foreach (var item in entities)
-		{
-			if (doc.Entities.Remove(item))
-			{
-				transfer.Entities.Add(item);
-			}
-		}
+		moveEntitiesWithXDataLayers(doc, transfer);
 
 		string file = Path.GetFileNameWithoutExtension(test.Path);
 		string pathOut = Path.Combine(TestVariables.OutputSamplesFolder, $"{file}_moved_out.dwg");
@@ -46,14 +42,7 @@ public class IOTests : IOTestsBase
 		CadDocument transfer = new CadDocument();
 		transfer.Header.Version = doc.Header.Version;
 
-		List<Entity> entities = new List<Entity>(doc.Entities);
-		foreach (var item in entities)
-		{
-			if (doc.Entities.Remove(item))
-			{
-				transfer.Entities.Add(item);
-			}
-		}
+		moveEntitiesWithXDataLayers(doc, transfer);
 
 		string file = Path.GetFileNameWithoutExtension(test.Path);
 		string pathOut = Path.Combine(TestVariables.OutputSamplesFolder, $"{file}_moved_to.dxf");
@@ -92,14 +81,7 @@ public class IOTests : IOTestsBase
 		CadDocument transfer = new CadDocument();
 		transfer.Header.Version = doc.Header.Version;
 
-		List<Entity> entities = new List<Entity>(doc.Entities);
-		foreach (var item in entities)
-		{
-			if (doc.Entities.Remove(item))
-			{
-				transfer.Entities.Add(item);
-			}
-		}
+		moveEntitiesWithXDataLayers(doc, transfer);
 
 		string file = Path.GetFileNameWithoutExtension(test.Path);
 		string pathOut = Path.Combine(TestVariables.OutputSamplesFolder, $"{file}_moved_to.dwg");
@@ -143,6 +125,31 @@ public class IOTests : IOTestsBase
 		string file = Path.GetFileNameWithoutExtension(inPath);
 		string pathOut = Path.Combine(TestVariables.OutputSamplesFolder, $"{file}_out.dxf");
 		this.writeDxfFile(pathOut, doc);
+	}
+
+	private static void moveEntitiesWithXDataLayers(CadDocument source, CadDocument target)
+	{
+		// Moving entities does not import layers referenced only by XDATA 1003. Keep this
+		// positive export fixture complete instead of relying on the old writer's silent zero.
+		var references = source.Entities.SelectMany(e => e.ExtendedData)
+			.SelectMany(d => d.Value.Records).OfType<ExtendedDataLayer>()
+			.Select(r => (Record: r, Layer: r.ResolveReference(source))).ToArray();
+		Assert.All(references, r => Assert.NotNull(r.Layer));
+		foreach (var reference in references)
+		{
+			if (!target.Layers.Contains(reference.Layer.Name))
+				target.Layers.Add((Layer)reference.Layer.Clone());
+		}
+		foreach (var entity in source.Entities.ToArray())
+		{
+			Assert.True(source.Entities.Remove(entity));
+			target.Entities.Add(entity);
+		}
+		foreach (var reference in references)
+		{
+			reference.Record.Value = target.Layers[reference.Layer.Name].Handle;
+			Assert.Same(target.Layers[reference.Layer.Name], reference.Record.ResolveReference(target));
+		}
 	}
 
 	protected virtual void writeDwgFile(string file, CadDocument doc)
