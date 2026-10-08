@@ -191,6 +191,10 @@ public abstract class CadWipeoutBase : Entity
 			{
 				throw new ArgumentException("The image reactor belongs to another document.", nameof(value));
 			}
+			if (value != null && (value.Owner != null && value.Owner != this || value.Image != null && value.Image != this))
+			{
+				throw new ArgumentException("The image reactor belongs to another image.", nameof(value));
+			}
 			this._definitionReactor = value;
 			if (value != null)
 			{

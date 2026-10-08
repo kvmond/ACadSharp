@@ -212,4 +212,87 @@ public class ReactorSerializationTests
 		messages.Clear(); reader.Read();
 		Assert.Contains(messages, e => e.NotificationType == NotificationType.Error && e.Message == "Reactor with handle 268435455 not found");
 	}
+	private static CadDocument imagePair(ACadVersion version)
+	{
+		var doc = new CadDocument(version);
+		foreach (var name in new[] { "FIRST", "SECOND" })
+		{
+			var image = new RasterImage(new ImageDefinition(name) { FileName = "synthetic.png", Size = new XY(10, 20) }) { Size = new XY(10, 20) };
+			image.ClipBoundaryVertices.Add(new XY(-0.5, -0.5)); image.ClipBoundaryVertices.Add(new XY(9.5, 19.5));
+			doc.Entities.Add(image);
+		}
+		doc.UpdateImageReactors();
+		return doc;
+	}
+
+	private static int[] dxfValues(string[] lines, ulong handle, string code)
+	{
+		var start = Enumerable.Range(0, lines.Length / 2).Single(i => lines[2 * i].Trim() == "5" && lines[2 * i + 1].Trim() == handle.ToString("X")) * 2;
+		var indices = new List<int>();
+		for (int i = start + 2; i + 1 < lines.Length && lines[i].Trim() != "0"; i += 2)
+			if (lines[i].Trim() == code) indices.Add(i + 1);
+		return indices.ToArray();
+	}
+
+	[Theory]
+	[InlineData(ACadVersion.AC1018, "shared")] [InlineData(ACadVersion.AC1032, "shared")]
+	[InlineData(ACadVersion.AC1018, "common")] [InlineData(ACadVersion.AC1032, "common")]
+	[InlineData(ACadVersion.AC1018, "associated")] [InlineData(ACadVersion.AC1032, "associated")]
+	[InlineData(ACadVersion.AC1018, "both")] [InlineData(ACadVersion.AC1032, "both")]
+	public void DxfImageReactorOwnershipErrorsNeverStealAValidImagesReactor(ACadVersion version, string malformed)
+	{
+		var source = imagePair(version); var images = source.Entities.OfType<RasterImage>().ToArray();
+		var reactors = images.Select(i => i.DefinitionReactor).ToArray();
+		var lines = Encoding.UTF8.GetString(write(source, 1)).Replace("\r\n", "\n").Split('\n');
+		var owners = dxfValues(lines, reactors[0].Handle, "330"); Assert.Equal(2, owners.Length);
+		if (malformed == "shared") lines[dxfValues(lines, images[1].Handle, "360").Single()] = reactors[0].Handle.ToString("X");
+		if (malformed == "common" || malformed == "both") lines[owners[0]] = images[1].Handle.ToString("X");
+		if (malformed == "associated" || malformed == "both") lines[owners[1]] = images[1].Handle.ToString("X");
+		var bytes = Encoding.UTF8.GetBytes(string.Join("\n", lines)); var original = bytes.ToArray();
+		var messages = new List<NotificationEventArgs>(); using var input = new MemoryStream(bytes);
+		using var reader = new DxfReader(input, (_, e) => messages.Add(e)); reader.Configuration.Failsafe = false;
+		var result = reader.Read();
+		Assert.Contains(messages, m => m.NotificationType == NotificationType.Error && m.Message.Contains("owner/image"));
+		var validIndex = malformed == "shared" ? 0 : 1; var invalidIndex = 1 - validIndex;
+		var valid = result.GetCadObject<RasterImage>(images[validIndex].Handle); var invalid = result.GetCadObject<RasterImage>(images[invalidIndex].Handle);
+		var retained = valid.DefinitionReactor;
+		Assert.Null(invalid.DefinitionReactor); Assert.Equal(reactors[validIndex].Handle, retained.Handle);
+		Assert.Same(valid, retained.Owner); Assert.Same(valid, retained.Image); Assert.Same(result, retained.Document);
+		Assert.True(result.Entities.Remove(invalid));
+		Assert.Same(retained, valid.DefinitionReactor); Assert.Same(retained, result.GetCadObject(retained.Handle));
+		Assert.Same(valid, retained.Owner); Assert.Same(valid, retained.Image); Assert.Equal(original, bytes);
+		for (int i = 0; i < 2; i++) { Assert.Same(reactors[i], images[i].DefinitionReactor); Assert.Same(images[i], reactors[i].Owner); Assert.Same(images[i], reactors[i].Image); }
+	}
+
+	[Theory]
+	[InlineData(ACadVersion.AC1018)] [InlineData(ACadVersion.AC1032)]
+	public void DwgImageReactorOwnerMismatchIsDiagnosedBeforeAssignment(ACadVersion version)
+	{
+		var source = imagePair(version); var images = source.Entities.OfType<RasterImage>().ToArray();
+		// Deliberately malformed native owner; do not pass through the safe property setter.
+		images[0].DefinitionReactor.Owner = images[1];
+		var bytes = write(source, 0); var messages = new List<NotificationEventArgs>();
+		using var input = new MemoryStream(bytes); using var reader = new DwgReader(input, (_, e) => messages.Add(e)); reader.Configuration.Failsafe = false;
+		var result = reader.Read();
+		Assert.Contains(messages, m => m.NotificationType == NotificationType.Error && m.Message.Contains("owner/image"));
+		Assert.Null(result.GetCadObject<RasterImage>(images[0].Handle).DefinitionReactor);
+		var valid = result.GetCadObject<RasterImage>(images[1].Handle);
+		Assert.Same(valid, valid.DefinitionReactor.Owner); Assert.Same(valid, valid.DefinitionReactor.Image);
+	}
+
+	[Fact]
+	public void ImageReactorSetterRejectsAnotherOwnerAtomicallyAndAllowsItsOwnReassignment()
+	{
+		var doc = imagePair(ACadVersion.AC1032); var images = doc.Entities.OfType<RasterImage>().ToArray();
+		var first = images[0].DefinitionReactor; var second = images[1].DefinitionReactor;
+		Assert.Throws<ArgumentException>(() => images[1].DefinitionReactor = first);
+		Assert.Same(first, images[0].DefinitionReactor); Assert.Same(second, images[1].DefinitionReactor);
+		Assert.Same(images[0], first.Owner); Assert.Same(images[0], first.Image); Assert.Same(doc, first.Document);
+		images[0].DefinitionReactor = first; Assert.Same(first, images[0].DefinitionReactor);
+		var detached = (ImageDefinitionReactor)first.Clone(); Assert.Null(detached.Owner); Assert.Null(detached.Image); Assert.Null(detached.Document);
+		Assert.Equal(first.ClassVersion, detached.ClassVersion); Assert.Same(images[0], first.Image);
+		var withForeignImage = (ImageDefinitionReactor)first.Clone(); withForeignImage.Image = images[0];
+		Assert.Throws<ArgumentException>(() => images[1].DefinitionReactor = withForeignImage); Assert.Same(second, images[1].DefinitionReactor);
+		Assert.Null(withForeignImage.Owner); Assert.Null(withForeignImage.Document); Assert.Same(images[0], withForeignImage.Image);
+	}
 }

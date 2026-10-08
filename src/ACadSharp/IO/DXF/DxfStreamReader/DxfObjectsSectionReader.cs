@@ -2305,7 +2305,7 @@ internal class DxfObjectsSectionReader : DxfSectionReaderBase
 			case DxfFileToken.ObjectSortEntsTable:
 				return this.readSortentsTable();
 			case DxfFileToken.ObjectImageDefinitionReactor:
-				return this.readObjectCodes<ImageDefinitionReactor>(new CadNonGraphicalObjectTemplate(new ImageDefinitionReactor()), this.readObjectSubclassMap);
+				return this.readObjectCodes<ImageDefinitionReactor>(new CadImageDefinitionReactorTemplate(), this.readImageDefinitionReactor);
 			case DxfFileToken.ObjectProxyObject:
 				return this.readObjectCodes<ProxyObject>(new CadProxyObjectTemplate(), this.readProxyObject);
 			case DxfFileToken.ObjectRasterVariables:
@@ -2427,6 +2427,16 @@ internal class DxfObjectsSectionReader : DxfSectionReaderBase
 
 				return unknownEntityTemplate;
 		}
+	}
+
+	private bool readImageDefinitionReactor(CadTemplate template, DxfMap map)
+	{
+		if (this._reader.Code == 330 && this.currentSubclass == DxfSubclassMarker.RasterImageDefReactor)
+		{
+			((CadImageDefinitionReactorTemplate)template).ImageHandle = this._reader.ValueAsHandle;
+			return true;
+		}
+		return this.readObjectSubclassMap(template, map);
 	}
 
 	private bool readObjectSubclassMap(CadTemplate template, DxfMap map)

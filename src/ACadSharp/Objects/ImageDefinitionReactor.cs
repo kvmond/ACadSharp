@@ -47,6 +47,15 @@ public class ImageDefinitionReactor : NonGraphicalObject, IDxfClassDefined
 	}
 
 	/// <inheritdoc/>
+	public override CadObject Clone()
+	{
+		var clone = (ImageDefinitionReactor)base.Clone();
+		// The detached clone must not retain the source image's ownership link.
+		clone.Image = null;
+		return clone;
+	}
+
+	/// <inheritdoc/>
 	public DxfClass GetDxfClass()
 	{
 		return new DxfClass
