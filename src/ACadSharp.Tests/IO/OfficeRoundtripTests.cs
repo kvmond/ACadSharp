@@ -3,6 +3,7 @@ using System.IO;
 using System.Linq;
 using ACadSharp.Entities;
 using ACadSharp.IO;
+using ACadSharp.Objects;
 using ACadSharp.Tables;
 using Xunit;
 
@@ -19,6 +20,51 @@ public class OfficeRoundtripTests
         return format == "dwg" ? DwgReader.Read(input) : DxfReader.Read(input);
     }
 
+    // Synthetic only. Original AC1032 Version 4 layout is checked separately by the host project.
+    [Theory]
+    [InlineData(ACadVersion.AC1018)]
+    [InlineData(ACadVersion.AC1024)]
+    [InlineData(ACadVersion.AC1027)]
+    [InlineData(ACadVersion.AC1032)]
+    public void BlockReferenceContextDefaultAndReferencesSurviveTwoGenerations(ACadVersion version)
+    {
+        foreach (var contextVersion in new short[] { 3, 4 })
+        foreach (var isDefault in new[] { false, true })
+        foreach (var unrelatedFlag in new[] { false, true })
+        {
+            var doc = new CadDocument(); doc.Header.Version = version;
+            var owner = new CadDictionary("CONTEXT_OWNER"); doc.RootDictionary.Add(owner);
+            var first = new XRecord("FIRST"); var last = new XRecord("LAST");
+            doc.RootDictionary.Add(first); doc.RootDictionary.Add(last);
+            var scale = new Scale("CUSTOM") { PaperUnits = 1.25, DrawingUnits = 17.5 }; doc.Scales.Add(scale);
+            var context = new BlockReferenceObjectContextData
+            {
+                Name = "CONTEXT", Version = contextVersion, Default = isDefault, HasFileToExtensionDictionary = unrelatedFlag,
+                Rotation = 0.731, InsertionPoint = new(12.5, -23.75, 0.125),
+                XScale = -2.5, YScale = 1, ZScale = 0.25, Scale = scale
+            };
+            owner.Add("CONTEXT", context); context.AddReactor(first); context.AddReactor(last);
+            var handle = context.Handle; var ownerHandle = owner.Handle; var scaleHandle = scale.Handle;
+            var reactors = context.Reactors.Select(r => r.Handle).ToArray();
+            for (var generation = 0; generation < 2; generation++)
+            {
+                using var bytes = new MemoryStream();
+                var notes = new System.Collections.Generic.List<string>();
+                DwgWriter.Write(bytes, doc, notification: (_, e) => notes.Add(e.Message + " " + e.Exception));
+                using var input = new MemoryStream(bytes.ToArray());
+                doc = DwgReader.Read(input, new DwgReaderConfiguration { Failsafe = false }, (_, e) => notes.Add(e.Message + " " + e.Exception));
+                Assert.True(doc.GetCadObject(handle) != null, "handle=" + handle + " " + string.Join(" | ", notes));
+                context = Assert.IsType<BlockReferenceObjectContextData>(doc.GetCadObject(handle));
+                Assert.Equal(contextVersion, context.Version); Assert.Equal(isDefault, context.Default);
+                Assert.Equal(0.731, context.Rotation); Assert.Equal(new(12.5, -23.75, 0.125), context.InsertionPoint);
+                Assert.Equal(-2.5, context.XScale); Assert.Equal(1, context.YScale); Assert.Equal(0.25, context.ZScale);
+                Assert.Equal(ownerHandle, context.Owner.Handle); Assert.Equal(reactors, context.Reactors.Select(r => r.Handle));
+                Assert.Equal(scaleHandle, context.Scale.Handle); Assert.Same(doc.Scales["CUSTOM"], context.Scale);
+                Assert.Equal(1.25, context.Scale.PaperUnits); Assert.Equal(17.5, context.Scale.DrawingUnits);
+                Assert.Same(context, ((CadDictionary)context.Owner).GetEntry<BlockReferenceObjectContextData>("CONTEXT"));
+            }
+        }
+    }
     [Theory]
     [InlineData(ACadVersion.AC1015, "dwg")]
     [InlineData(ACadVersion.AC1018, "dwg")]

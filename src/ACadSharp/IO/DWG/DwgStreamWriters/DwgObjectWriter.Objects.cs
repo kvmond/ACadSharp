@@ -402,7 +402,11 @@ internal partial class DwgObjectWriter : DwgSectionIO
 
 	private void writeBlockReferenceObjectContextData(BlockReferenceObjectContextData contextData)
 	{
-		this.writeAnnotScaleObjectContextData(contextData);
+		// BLKREF stores Default immediately after Version, without the additional
+		// extension-dictionary flag emitted by the shared context writer.
+		this._writer.WriteBitShort(contextData.Version);
+		this._writer.WriteBit(contextData.Default);
+		this._writer.HandleReference(DwgReferenceType.HardPointer, contextData.Scale);
 
 		this._writer.WriteBitDouble(contextData.Rotation);
 		this._writer.Write3BitDouble(contextData.InsertionPoint);
