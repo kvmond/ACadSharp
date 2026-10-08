@@ -234,6 +234,7 @@ namespace ACadSharp.IO.DXF
 
 		private void writeLayer(Layer layer, DxfClassMap map)
 		{
+			ACadSharp.Objects.PlotStyleReferences.Validate(layer, this._document.Header.Version);
 			int index = layer.Color.IsTrueColor ? layer.Color.GetApproxIndex() : layer.Color.Index;
 			if (layer.IsOn)
 			{
@@ -255,8 +256,7 @@ namespace ACadSharp.IO.DXF
 
 			this._writer.Write(370, (short)layer.LineWeight, map);
 
-			//this._writer.Write(390, layer.PlotStyleName, map);
-			this._writer.Write(390, (ulong)0, map);
+			this._writer.Write(390, layer.PlotStyleName);
 		}
 
 		private void writeLineType(LineType linetype, DxfClassMap map)

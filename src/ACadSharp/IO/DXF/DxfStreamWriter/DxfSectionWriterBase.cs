@@ -193,6 +193,7 @@ internal abstract partial class DxfSectionWriterBase
 
 	protected void writeCommonEntityData(Entity entity)
 	{
+		ACadSharp.Objects.PlotStyleReferences.Validate(entity, this._document.Header.Version);
 		DxfClassMap map = DxfClassMap.Create<Entity>();
 
 		this._writer.Write(DxfCode.Subclass, DxfSubclassMarker.Entity);
@@ -231,6 +232,16 @@ internal abstract partial class DxfSectionWriterBase
 		}
 
 		this._writer.Write(370, entity.LineWeight);
+		this.writePlotStyle(entity);
+	}
+
+	private void writePlotStyle(Entity entity)
+	{
+		ACadSharp.Objects.PlotStyleReferences.Validate(entity, this._document.Header.Version);
+		// AutoCAD's DWG SEQEND 3/null representation exports with neither 380 nor 390 in DXF.
+		if (entity is Seqend && entity.PlotStyleType == ACadSharp.Header.EntityPlotStyleType.ByObjectId && entity.PlotStyleHandle == 0) return;
+		if (entity.PlotStyleType == ACadSharp.Header.EntityPlotStyleType.ByObjectId) this._writer.Write(390, entity.PlotStyleHandle);
+		else if (entity.PlotStyleType != ACadSharp.Header.EntityPlotStyleType.ByLayer) this._writer.Write(380, (short)entity.PlotStyleType);
 	}
 
 	protected abstract void writeSection();

@@ -476,6 +476,7 @@ internal partial class DwgObjectWriter : DwgSectionIO
 
 	private void writeCommonEntityData(Entity entity)
 	{
+		PlotStyleReferences.Validate(entity, this._version);
 		this.writeCommonData(entity);
 
 		//Graphic present Flag B 1 if a graphic is present
@@ -980,10 +981,9 @@ internal partial class DwgObjectWriter : DwgSectionIO
 
 		//R2000 +:
 		//Plotstyle flags	BB	00 = bylayer, 01 = byblock, 11 = plotstyle handle present at end of object
-		this._writer.Write2Bits(0b00);
-		{
-			//PLOTSTYLE (hard pointer) present if plotstyle flags were 11
-		}
+		this._writer.Write2Bits((byte)entity.PlotStyleType);
+		if (entity.PlotStyleType == ACadSharp.Header.EntityPlotStyleType.ByObjectId)
+			this._writer.HandleReference(DwgReferenceType.HardPointer, entity.PlotStyle);
 
 		//R2007 +:
 		if (this._version > ACadVersion.AC1021)
@@ -1172,6 +1172,7 @@ internal partial class DwgObjectWriter : DwgSectionIO
 
 	private void writeLayer(Layer layer)
 	{
+		PlotStyleReferences.Validate(layer, this._version);
 		this.writeCommonNonEntityData(layer);
 
 		//Common:
@@ -1233,8 +1234,8 @@ internal partial class DwgObjectWriter : DwgSectionIO
 		//R2000+:
 		if (this.R2000Plus)
 		{
-			//H 390 Plotstyle (hard pointer), by default points to PLACEHOLDER with handle 0x0f.
-			this._writer.HandleReference(DwgReferenceType.HardPointer, 0);
+			//H 390 Plotstyle (hard pointer).
+			this._writer.HandleReference(DwgReferenceType.HardPointer, layer.PlotStyle);
 		}
 
 		//R2007+:

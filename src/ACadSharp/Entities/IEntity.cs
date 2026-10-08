@@ -1,4 +1,5 @@
 ﻿using ACadSharp.Objects;
+using ACadSharp.Header;
 using ACadSharp.Tables;
 
 namespace ACadSharp.Entities
@@ -67,6 +68,13 @@ namespace ACadSharp.Entities
 		/// Material object (present if not BYLAYER)
 		/// </summary>
 		Material Material { get; set; }
+
+		/// <summary>Plot-style inheritance mode.</summary>
+		EntityPlotStyleType PlotStyleType { get; set; }
+		/// <summary>Explicit dictionary-owned plot-style reference.</summary>
+		AcdbPlaceHolder PlotStyle { get; set; }
+		/// <summary>Explicit or unresolved plot-style handle.</summary>
+		ulong PlotStyleHandle { get; }
 
 		/// <summary>
 		/// Transparency value.

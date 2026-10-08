@@ -621,7 +621,7 @@ internal class DxfTablesSectionReader : DxfSectionReaderBase
 				//Unknown code value, always 0
 				return true;
 			case 390:
-				template.CadObject.PlotStyleName = this._reader.ValueAsHandle;
+				tmp.PlotStyleHandle = this._reader.ValueAsHandle;
 				return true;
 			case 430:
 				tmp.TrueColorName = this._reader.ValueAsString;

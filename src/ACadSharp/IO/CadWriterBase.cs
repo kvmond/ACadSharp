@@ -40,6 +40,7 @@ namespace ACadSharp.IO
 		/// <inheritdoc/>
 		public virtual void Write()
 		{
+			ACadSharp.Objects.PlotStyleReferences.ValidateHeader(this._document);
 			this._document.UpdateImageReactors();
 
 			this._document.UpdateDxfClasses(this.Configuration.ResetDxfClasses);

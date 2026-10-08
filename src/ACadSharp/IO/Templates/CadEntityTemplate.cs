@@ -25,6 +25,8 @@ internal class CadEntityTemplate : CadTemplate<Entity>
 	public byte? LtypeFlags { get; set; }
 
 	public ulong? MaterialHandle { get; set; }
+	public ulong? PlotStyleHandle { get; set; }
+	public bool HasPlotStyleType { get; set; }
 
 	public ulong? NextEntity { get; set; }
 
@@ -114,6 +116,13 @@ internal class CadEntityTemplate : CadTemplate<Entity>
 		if (builder.TryGetCadObject(this.MaterialHandle, out Material material))
 		{
 			this.CadObject.Material = material;
+		}
+
+		if (this.PlotStyleHandle.GetValueOrDefault() != 0)
+		{
+			this.CadObject.PlotStyleHandle = this.PlotStyleHandle.Value;
+			if (builder.TryGetCadObject(this.PlotStyleHandle, out AcdbPlaceHolder plotStyle)) this.CadObject.PlotStyle = plotStyle;
+			else builder.Notify($"Plot style {this.PlotStyleHandle:X} could not be resolved.", NotificationType.Warning);
 		}
 
 		if (this.ProxyGraphics != null && !builder.IgnoreProxyGraphics)

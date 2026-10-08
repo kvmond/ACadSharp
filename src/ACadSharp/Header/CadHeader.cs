@@ -262,6 +262,23 @@ public class CadHeader
 	[CadSystemVariable("$CEPSNTYPE", 380)]
 	public EntityPlotStyleType CurrentEntityPlotStyle { get; set; }
 
+	/// <summary>Explicit plot-style placeholder for new entities when CEPSNTYPE is 3.</summary>
+	public AcdbPlaceHolder CurrentEntityPlotStyleReference
+	{
+		get => _currentEntityPlotStyleReference;
+		set { _currentEntityPlotStyleReference = PlotStyleReferences.Bind(this.Document, value); _currentEntityPlotStyleHandle = 0; }
+	}
+
+	/// <summary>CEPSNID, present only for ByObjectId. Unresolved input handles remain observable.</summary>
+	[CadSystemVariable("$CEPSNID", 390)]
+	public ulong CurrentEntityPlotStyleHandle
+	{
+		get => _currentEntityPlotStyleReference?.Handle ?? _currentEntityPlotStyleHandle;
+		internal set => _currentEntityPlotStyleHandle = value;
+	}
+	private AcdbPlaceHolder _currentEntityPlotStyleReference;
+	private ulong _currentEntityPlotStyleHandle;
+
 	/// <summary>
 	/// Gets the current layer associated with the document. If the document is null, returns the default layer.
 	/// </summary>

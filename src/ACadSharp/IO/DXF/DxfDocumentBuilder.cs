@@ -74,6 +74,8 @@ internal class DxfDocumentBuilder : CadDocumentBuilder
 
 		base.BuildDocument();
 
+		var header = this.DocumentToBuild.Header;
+		if (this.TryGetCadObject(header.CurrentEntityPlotStyleHandle, out AcdbPlaceHolder plotStyle)) header.CurrentEntityPlotStyleReference = plotStyle;
 		this.applyAcdsData();
 
 		if (this.Configuration.CreateDefaults)

@@ -1,6 +1,7 @@
 ﻿using ACadSharp.Attributes;
 using ACadSharp.Entities.ProxyGraphics;
 using ACadSharp.Objects;
+using ACadSharp.Header;
 using ACadSharp.Tables;
 using CSMath;
 using CSMath.Extensions;
@@ -86,6 +87,23 @@ public abstract class Entity : CadObject, IEntity
 			this._material = this.updateCollectionEntry(value, m => this._material = m, this.Document?.Materials);
 		}
 	}
+
+	/// <summary>Plot-style inheritance or an explicit dictionary placeholder.</summary>
+	[DxfCodeValue(380)]
+	public EntityPlotStyleType PlotStyleType { get; set; }
+
+	/// <summary>Explicit plot-style dictionary entry. Set PlotStyleType to ByObjectId when assigning one.</summary>
+	[DxfCodeValue(DxfReferenceType.Handle, 390)]
+	public AcdbPlaceHolder PlotStyle
+	{
+		get => _plotStyle;
+		set { _plotStyle = PlotStyleReferences.Bind(this.Document, value); _unresolvedPlotStyleHandle = 0; }
+	}
+
+	/// <summary>Explicit plot-style handle, including an unresolved input reference.</summary>
+	public ulong PlotStyleHandle { get => _plotStyle?.Handle ?? _unresolvedPlotStyleHandle; internal set => _unresolvedPlotStyleHandle = value; }
+	private AcdbPlaceHolder _plotStyle;
+	private ulong _unresolvedPlotStyleHandle;
 
 	/// <summary>
 	/// Gets the list of proxy geometries for this entity.
@@ -239,6 +257,8 @@ public abstract class Entity : CadObject, IEntity
 			throw new ArgumentNullException(nameof(entity));
 		}
 
+		var plotStyle = PlotStyleReferences.Bind(this.Document, entity.PlotStyle);
+
 		if (entity.Handle == 0 || this.Document != entity.Document)
 		{
 			this.Layer = (Layer)entity.Layer.Clone();
@@ -252,6 +272,9 @@ public abstract class Entity : CadObject, IEntity
 			this.Material = entity.Material;
 		}
 
+		this.PlotStyle = plotStyle;
+		this.PlotStyleType = entity.PlotStyleType;
+		if (this._plotStyle == null) this._unresolvedPlotStyleHandle = entity.PlotStyleHandle;
 		this.Color = entity.Color;
 		this.LineWeight = entity.LineWeight;
 		this.LineTypeScale = entity.LineTypeScale;
@@ -261,6 +284,7 @@ public abstract class Entity : CadObject, IEntity
 
 	internal override void AssignDocument(CadDocument doc)
 	{
+		this._plotStyle = PlotStyleReferences.Bind(doc, this._plotStyle, rejectMissing: false);
 		base.AssignDocument(doc);
 
 		this._bookColor = this.updateCollectionEntry(this._bookColor, c => this._bookColor = c, doc.Colors);

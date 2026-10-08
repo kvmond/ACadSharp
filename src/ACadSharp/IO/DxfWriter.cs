@@ -79,7 +79,7 @@ public class DxfWriter : CadWriterBase<DxfWriterConfiguration>
 	/// <inheritdoc/>
 	public override void Dispose()
 	{
-		this._writer.Dispose();
+		this._writer?.Dispose();
 	}
 
 	/// <inheritdoc/>

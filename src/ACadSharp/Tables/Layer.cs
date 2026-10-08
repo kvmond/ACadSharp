@@ -127,7 +127,16 @@ public class Layer : TableEntry
 	/// PlotStyleName object
 	/// </summary>
 	[DxfCodeValue(DxfReferenceType.Unprocess, 390)]
-	public ulong PlotStyleName { get; internal set; } = 0;
+	public ulong PlotStyleName { get => _plotStyle?.Handle ?? _unresolvedPlotStyleHandle; internal set => _unresolvedPlotStyleHandle = value; }
+
+	/// <summary>Dictionary-owned plot-style entry.</summary>
+	public AcdbPlaceHolder PlotStyle
+	{
+		get => _plotStyle;
+		set { _plotStyle = PlotStyleReferences.Bind(this.Document, value); _unresolvedPlotStyleHandle = 0; }
+	}
+	private AcdbPlaceHolder _plotStyle;
+	private ulong _unresolvedPlotStyleHandle;
 
 	/// <inheritdoc/>
 	public override string SubclassMarker => DxfSubclassMarker.Layer;
@@ -171,6 +180,7 @@ public class Layer : TableEntry
 
 	internal override void AssignDocument(CadDocument doc)
 	{
+		this._plotStyle = PlotStyleReferences.Bind(doc, this._plotStyle, rejectMissing: false);
 		base.AssignDocument(doc);
 
 		this.updateTableEntry(this._lineType, l => this._lineType = l, doc.LineTypes);

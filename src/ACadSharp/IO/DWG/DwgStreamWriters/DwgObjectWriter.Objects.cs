@@ -606,6 +606,7 @@ internal partial class DwgObjectWriter : DwgSectionIO
 
 	private void writeCadDictionaryWithDefault(CadDictionaryWithDefault dictionary)
 	{
+		PlotStyleReferences.ValidateDefault(dictionary);
 		this.writeDictionary(dictionary);
 
 		//H 7 Default entry (hard pointer)

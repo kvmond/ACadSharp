@@ -28,7 +28,12 @@ namespace ACadSharp.IO.Templates
 
 			base.build(builder);
 
-			//this.CadObject.PlotStyleName = builder.GetCadObject(PlotStyleHandle);
+			this.CadObject.PlotStyleName = this.PlotStyleHandle;
+			if (this.PlotStyleHandle != 0)
+			{
+				if (builder.TryGetCadObject(this.PlotStyleHandle, out AcdbPlaceHolder plotStyle)) this.CadObject.PlotStyle = plotStyle;
+				else builder.Notify($"Layer plot style {this.PlotStyleHandle:X} could not be resolved.", NotificationType.Warning);
+			}
 
 			if (builder.TryGetCadObject(this.MaterialHandle, out Material material))
 			{

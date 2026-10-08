@@ -1,5 +1,7 @@
 ﻿using ACadSharp.Attributes;
 using ACadSharp.Classes;
+using System;
+using System.Linq;
 
 namespace ACadSharp.Objects;
 
@@ -25,20 +27,8 @@ public class CadDictionaryWithDefault : CadDictionary, IDxfClassDefined
 			return _defaultEntry;
 		}
 
-		set
-		{
-			if (value == null)
-			{
-				this.Document?.AddCadObject(value);
-			}
-
-			if (this._defaultEntry != null)
-			{
-				this.Document?.RemoveCadObject(this._defaultEntry);
-			}
-
-			this._defaultEntry = value;
-		}
+		// The dictionary owns its entries; changing this pointer must never unregister them.
+		set { this._defaultEntry = value; this._unresolvedDefaultEntryHandle = 0; }
 	}
 
 	/// <inheritdoc/>
@@ -50,6 +40,9 @@ public class CadDictionaryWithDefault : CadDictionary, IDxfClassDefined
 	/// <inheritdoc/>
 	public override string SubclassMarker => DxfSubclassMarker.DictionaryWithDefault;
 
+	/// <summary>Default entry handle, including an unresolved input reference.</summary>
+	public ulong DefaultEntryHandle { get => _defaultEntry?.Handle ?? _unresolvedDefaultEntryHandle; internal set => _unresolvedDefaultEntryHandle = value; }
+	private ulong _unresolvedDefaultEntryHandle;
 	private CadObject _defaultEntry;
 
 	public CadDictionaryWithDefault() : base()
@@ -59,6 +52,19 @@ public class CadDictionaryWithDefault : CadDictionary, IDxfClassDefined
 	public CadDictionaryWithDefault(string name, CadObject defaultEntry) : base(name)
 	{
 		this.DefaultEntry = defaultEntry;
+	}
+
+	/// <inheritdoc/>
+	public override CadObject Clone()
+	{
+		if ((_defaultEntry == null && DefaultEntryHandle != 0) || (_defaultEntry != null && !this.Any(e => ReferenceEquals(e, _defaultEntry))))
+			throw new InvalidOperationException("The default entry must belong to the dictionary before cloning.");
+		var clone = (CadDictionaryWithDefault)base.Clone();
+		clone._defaultEntry = _defaultEntry == null ? null : clone.GetEntry<NonGraphicalObject>(((NonGraphicalObject)_defaultEntry).Name);
+		// Internal owner reactors can follow the cloned dictionary; external reactors remain detached.
+		foreach (var entry in this.Where(e => e.Reactors.Any(r => ReferenceEquals(r, this))))
+			clone.GetEntry<NonGraphicalObject>(entry.Name).AddReactor(clone);
+		return clone;
 	}
 
 	/// <inheritdoc/>

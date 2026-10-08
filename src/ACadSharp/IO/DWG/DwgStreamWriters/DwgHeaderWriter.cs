@@ -832,7 +832,7 @@ namespace ACadSharp.IO.DWG
 				//H: DICTIONARY(PLOTSETTINGS)(hard pointer)
 				this._writer.HandleReference(DwgReferenceType.HardPointer, null);
 				//H: DICTIONARY(PLOTSTYLES)(hard pointer)
-				this._writer.HandleReference(DwgReferenceType.HardPointer, null);
+				this._writer.HandleReference(DwgReferenceType.HardPointer, ACadSharp.Objects.PlotStyleReferences.Dictionary(this._document));
 			}
 
 			//R2004 +:
@@ -907,7 +907,7 @@ namespace ACadSharp.IO.DWG
 				if (this._header.CurrentEntityPlotStyle == EntityPlotStyleType.ByObjectId)
 				{
 					//H: CPSNID(present only if CEPSNTYPE == 3) (hard pointer)
-					this._writer.HandleReference(DwgReferenceType.HardPointer, null);
+					this._writer.HandleReference(DwgReferenceType.HardPointer, this._header.CurrentEntityPlotStyleReference);
 				}
 
 				//TV: FINGERPRINTGUID

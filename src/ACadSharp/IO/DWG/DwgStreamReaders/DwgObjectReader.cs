@@ -471,11 +471,9 @@ namespace ACadSharp.IO.DWG
 
 			//R2000 +:
 			//Plotstyle flags	BB	00 = bylayer, 01 = byblock, 11 = plotstyle handle present at end of object
-			if (this._objectReader.Read2Bits() == 3)
-			{
-				//PLOTSTYLE (hard pointer) present if plotstyle flags were 11
-				long plotstyleFlags = (long)this.handleReference();
-			}
+			entity.PlotStyleType = (ACadSharp.Header.EntityPlotStyleType)this._objectReader.Read2Bits();
+			if (entity.PlotStyleType == ACadSharp.Header.EntityPlotStyleType.ByObjectId)
+				template.PlotStyleHandle = this.handleReference();
 
 			//R2007 +:
 			if (this.R2010Plus)

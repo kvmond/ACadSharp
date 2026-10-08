@@ -316,6 +316,15 @@ internal abstract class DxfSectionReaderBase
 			//Proxy entity graphics data
 			case 310:
 				break;
+			case 380:
+				// Preserve contradictory input too: the writer must reject it, not silently normalize it.
+				template.HasPlotStyleType = true;
+				template.CadObject.PlotStyleType = (ACadSharp.Header.EntityPlotStyleType)this._reader.ValueAsShort;
+				break;
+			case 390:
+				template.PlotStyleHandle = this._reader.ValueAsHandle;
+				if (template.PlotStyleHandle != 0 && !template.HasPlotStyleType) template.CadObject.PlotStyleType = ACadSharp.Header.EntityPlotStyleType.ByObjectId;
+				break;
 			case 347:
 				template.MaterialHandle = this._reader.ValueAsHandle;
 				break;

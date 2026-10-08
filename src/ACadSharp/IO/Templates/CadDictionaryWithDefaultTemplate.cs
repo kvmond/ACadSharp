@@ -14,6 +14,7 @@ namespace ACadSharp.IO.Templates
 		{
 			base.build(builder);
 
+			((CadDictionaryWithDefault)this.CadObject).DefaultEntryHandle = DefaultEntryHandle.GetValueOrDefault();
 			if (builder.TryGetCadObject(DefaultEntryHandle, out CadObject entry))
 			{
 				((CadDictionaryWithDefault)this.CadObject).DefaultEntry = entry;

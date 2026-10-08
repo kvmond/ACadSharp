@@ -31,11 +31,19 @@ namespace ACadSharp.IO.DXF
 				if (item.Value.GetValue(this.Header) == null)
 					continue;
 
+				if (this.Header.Version < ACadVersion.AC1015 && (item.Key == "$CEPSNID" || item.Key == "$CEPSNTYPE" || item.Key == "$PSTYLEMODE")) continue;
+				if (item.Key == "$CEPSNID" && this.Header.CurrentEntityPlotStyle != EntityPlotStyleType.ByObjectId) continue;
 				this._writer.Write(DxfCode.CLShapeText, item.Key);
 
 				if (item.Key == "$HANDSEED")    //Not very elegant but by now...
 				{
 					this._writer.Write(DxfCode.Handle, this._document.Header.HandleSeed);
+					continue;
+				}
+
+				if (item.Key == "$CEPSNID")
+				{
+					this._writer.Write(390, this.Header.CurrentEntityPlotStyleHandle);
 					continue;
 				}
 

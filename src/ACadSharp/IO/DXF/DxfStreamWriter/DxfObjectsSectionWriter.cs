@@ -73,6 +73,7 @@ internal class DxfObjectsSectionWriter : DxfSectionWriterBase
 
 		if (dict is CadDictionaryWithDefault withDefault)
 		{
+			PlotStyleReferences.ValidateDefault(withDefault);
 			this._writer.Write(100, DxfSubclassMarker.DictionaryWithDefault);
 			this._writer.WriteHandle(340, withDefault.DefaultEntry);
 		}

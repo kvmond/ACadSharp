@@ -77,6 +77,8 @@ namespace ACadSharp.IO.DWG
 
 		public void UpdateHeader(CadHeader header, DwgDocumentBuilder builder)
 		{
+			header.CurrentEntityPlotStyleHandle = this.CPSNID.GetValueOrDefault();
+			if (builder.TryGetCadObject(this.CPSNID, out AcdbPlaceHolder plotStyle)) header.CurrentEntityPlotStyleReference = plotStyle;
 			TableEntry entry;
 			if (builder.TryGetCadObject(this.CLAYER, out entry))
 			{

@@ -1218,6 +1218,7 @@ internal abstract partial class DxfSectionWriterBase
 		this._writer.Write(330, seqend.Owner.Handle);
 		this._writer.Write(DxfCode.Subclass, DxfSubclassMarker.Entity);
 		this._writer.Write(8, seqend.Layer.Name);
+		this.writePlotStyle(seqend);
 	}
 
 	private void writeShape(Shape shape)
