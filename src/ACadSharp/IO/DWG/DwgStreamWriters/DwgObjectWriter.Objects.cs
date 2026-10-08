@@ -1,4 +1,4 @@
-﻿using ACadSharp.Objects;
+using ACadSharp.Objects;
 using ACadSharp.Objects.AEC;
 using ACadSharp.Objects.Evaluations;
 using CSMath;
@@ -586,8 +586,7 @@ internal partial class DwgObjectWriter : DwgSectionIO
 		//BL 92 Line weight
 		this._writer.WriteBitLong((int)border.LineWeight);
 		//H 40 Line type (hard pointer)
-		//this._writer.HandleReference(DwgReferenceType.HardPointer, border.LineType);
-		this._writer.HandleReference(DwgReferenceType.HardPointer, null);
+		this._writer.HandleReference(DwgReferenceType.HardPointer, border.LineType);
 		//BL 93 Invisibility: 1 = invisible, 0 = visible.
 		this._writer.WriteBitLong(border.IsInvisible ? 1 : 0);
 		//BD 40 Double line spacing
@@ -745,7 +744,7 @@ internal partial class DwgObjectWriter : DwgSectionIO
 
 		//BL 91 Property override flags. The definition is the same as the content format
 		//propery override flags, see paragraph 20.4.101.3.
-		this._writer.WriteBitLong((int)cellStyle.PropertyOverrideFlags);
+		this._writer.WriteBitLong((int)cellStyle.CellPropertyOverrideFlags);
 		//BL  92 Merge flags, but may only for bits 0x8000 and 0x10000.
 		this._writer.WriteBitLong((int)cellStyle.TableCellStylePropertyFlags);
 		//TC 62 Background color
@@ -2304,6 +2303,11 @@ internal partial class DwgObjectWriter : DwgSectionIO
 
 	private void writeTableStyle(TableStyle tableStyle)
 	{
+		if (this.R2007Pre && tableStyle.CellStyles.Count != 0)
+			throw new NotSupportedException("Custom TABLESTYLE cells require a modern DWG format.");
+		if (tableStyle.RawHeaderHandle != 0)
+			throw new NotSupportedException("TABLESTYLE has an unresolved native header ownership reference.");
+
 		if (this.R2007Pre)
 		{
 			//TABLESTYLE format until R21
@@ -2332,13 +2336,13 @@ internal partial class DwgObjectWriter : DwgSectionIO
 		}
 
 		//RC - Unknown
-		this._writer.WriteByte(0);
+		this._writer.WriteByte(tableStyle.RawHeaderByte);
 		//Description TV 3
 		this._writer.WriteVariableText(tableStyle.Description);
 		//BL - Unknown
-		this._writer.WriteBitLong(0);
+		this._writer.WriteBitLong(tableStyle.RawHeaderValue1);
 		//BL - Unknown
-		this._writer.WriteBitLong(0);
+		this._writer.WriteBitLong(tableStyle.RawHeaderValue2);
 		//H - Unknown(hard owner)
 		this._writer.HandleReference(DwgReferenceType.HardOwnership, null);
 
@@ -2366,17 +2370,20 @@ internal partial class DwgObjectWriter : DwgSectionIO
 		int index = 1;
 		if (tableStyle.TitleCellStyle != null)
 		{
-			this._writer.WriteBitLong(index++);
+			this._writer.WriteBitLong(tableStyle.TitleCellStyle.RawIndex ?? index);
+			index++;
 			this.writeCellStyleWithId(tableStyle.TitleCellStyle);
 		}
 		if (tableStyle.HeaderCellStyle != null)
 		{
-			this._writer.WriteBitLong(index++);
+			this._writer.WriteBitLong(tableStyle.HeaderCellStyle.RawIndex ?? index);
+			index++;
 			this.writeCellStyleWithId(tableStyle.HeaderCellStyle);
 		}
 		if (tableStyle.DataCellStyle != null)
 		{
-			this._writer.WriteBitLong(index++);
+			this._writer.WriteBitLong(tableStyle.DataCellStyle.RawIndex ?? index);
+			index++;
 			this.writeCellStyleWithId(tableStyle.DataCellStyle);
 		}
 
@@ -2389,7 +2396,7 @@ internal partial class DwgObjectWriter : DwgSectionIO
 			{
 				//… The cell style fields, see paragraph 20.4.101.4.
 				//Index starting by 1
-				this._writer.WriteBitLong(index);
+				this._writer.WriteBitLong(cellStyle.RawIndex ?? index);
 				this.writeCellStyleWithId(cellStyle);
 				index++;
 			}

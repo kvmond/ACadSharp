@@ -1747,6 +1747,8 @@ internal class DxfObjectsSectionWriter : DxfSectionWriterBase
 
 	private void writeTableStyle(TableStyle style)
 	{
+		if (style.CellStyles.Count != 0)
+			throw new NotSupportedException("Custom TABLESTYLE cells require unsupported DXF CELLSTYLEMAP output.");
 		DxfClassMap map = DxfClassMap.Create<TableStyle>();
 
 		this._writer.Write(100, DxfSubclassMarker.TableStyle);

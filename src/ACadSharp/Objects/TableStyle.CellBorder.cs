@@ -1,4 +1,5 @@
 ﻿using ACadSharp.Attributes;
+using ACadSharp.Tables;
 
 namespace ACadSharp.Objects;
 
@@ -63,6 +64,26 @@ public partial class TableStyle
 		/// </summary>
 		[DxfCodeValue(91)]
 		public BorderType Type { get; set; } = BorderType.Single;
+
+		/// <summary>The registered border linetype, or null when the stored reference is zero.</summary>
+		public LineType LineType
+		{
+			get => this._lineType;
+			set { this._lineType = value; this.ResourceOwner?.RefreshResourceReferences(); }
+		}
+
+		internal TableStyle ResourceOwner { get; set; }
+		private LineType _lineType;
+		internal void SetLineTypeReference(LineType value) => this._lineType = value;
+
+		/// <summary>Creates an independent border and detached linetype reference.</summary>
+		public CellBorder Clone()
+		{
+			var clone = (CellBorder)this.MemberwiseClone();
+			clone.ResourceOwner = null;
+			clone._lineType = (LineType)this._lineType?.Clone();
+			return clone;
+		}
 
 		/// <summary>
 		/// Initializes a new instance of the CellBorder class with the specified edge flags.

@@ -67,7 +67,24 @@ public partial class TableStyle
 		/// </summary>
 		//[DxfCodeValue(DxfReferenceType.Handle, 340)]
 		[DxfCodeValue(DxfReferenceType.Name, 7)]
-		public TextStyle TextStyle { get; set; } = TextStyle.Default;
+		public TextStyle TextStyle
+		{
+			get => this._textStyle;
+			set { this._textStyle = value; this.ResourceOwner?.RefreshResourceReferences(); }
+		}
+
+		internal TableStyle ResourceOwner { get; set; }
+		private TextStyle _textStyle = TextStyle.Default;
+		internal void SetTextStyleReference(TextStyle value) => this._textStyle = value;
+
+		/// <summary>Creates independent content and detached resource references.</summary>
+		public virtual ContentFormat Clone()
+		{
+			var clone = (ContentFormat)this.MemberwiseClone();
+			clone.ResourceOwner = null;
+			clone._textStyle = (TextStyle)this._textStyle?.Clone();
+			return clone;
+		}
 
 		/// <summary>
 		/// Gets or sets the value data type.

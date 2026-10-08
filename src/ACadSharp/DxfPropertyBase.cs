@@ -439,6 +439,7 @@ namespace ACadSharp
 			{
 				//TODO: Implement color getter
 				Color color = (Color)this._property.GetValue(obj);
+				if (color.IsNone) throw new NotSupportedException("None has no generic DXF color representation.");
 
 				switch (code)
 				{

@@ -1,4 +1,4 @@
-﻿using ACadSharp.Objects;
+using ACadSharp.Objects;
 using System.Collections.Generic;
 using System.Linq;
 using static ACadSharp.Objects.TableStyle;
@@ -23,7 +23,15 @@ internal partial class CadTableStyleTemplate : CadTemplate<TableStyle>
 
 	public CadTableStyleTemplate.CadCellStyleTemplate CreateCurrentCellStyleTemplate()
 	{
-		this.CurrentCellStyleTemplate = new CadTableStyleTemplate.CadCellStyleTemplate();
+		// Legacy DXF stores exactly three unnamed row records in DATA, TITLE, HEADER order.
+		var cell = this.CellStyleTemplates.Count switch
+		{
+			0 => this.CadObject.DataCellStyle,
+			1 => this.CadObject.TitleCellStyle,
+			2 => this.CadObject.HeaderCellStyle,
+			_ => throw new System.NotSupportedException("Extra legacy TABLESTYLE rows are not supported.")
+		};
+		this.CurrentCellStyleTemplate = new CadTableStyleTemplate.CadCellStyleTemplate(cell);
 		this.CellStyleTemplates.Add(this.CurrentCellStyleTemplate);
 		return this.CurrentCellStyleTemplate;
 	}
@@ -52,6 +60,12 @@ internal partial class CadTableStyleTemplate : CadTemplate<TableStyle>
 		if (this.tryGetCellStyle(CellStyle.TitleCellStyleName, out CellStyle titleStyle))
 		{
 			this.CadObject.TitleCellStyle = titleStyle;
+		}
+		foreach (var item in this.CellStyleTemplates)
+		{
+			var cell = item.CellStyle;
+			if (cell != this.CadObject.TitleCellStyle && cell != this.CadObject.HeaderCellStyle && cell != this.CadObject.DataCellStyle)
+				this.CadObject.CellStyles.Add(cell);
 		}
 	}
 

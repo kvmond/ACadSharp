@@ -80,6 +80,7 @@ public partial class TableStyle
 				var data = new CellStyle
 				{
 					Name = TableCellStyleName,
+					TextStyle = null,
 					StyleClass = CellStyleClass.Label,
 					Id = 4,
 					HasData = true,
@@ -104,7 +105,13 @@ public partial class TableStyle
 		/// <summary>
 		/// Gets or sets the bottom border style of the cell.
 		/// </summary>
-		public CellBorder BottomBorder { get; set; } = new(CellEdgeFlags.Bottom);
+		public CellBorder BottomBorder
+		{
+			get => this._bottomBorder;
+			set { this.ResourceOwner?.CheckBorderOwner(value); var old = this._bottomBorder; this._bottomBorder = value;
+				this.ResourceOwner?.BorderChanged(old, value); }
+		}
+		private CellBorder _bottomBorder = new(CellEdgeFlags.Bottom);
 
 		/// <summary>
 		/// Gets or sets the bottom margin of the cell.
@@ -129,10 +136,19 @@ public partial class TableStyle
 		/// </summary>
 		public CellContentLayoutFlags ContentLayoutFlags { get; set; }
 
+		/// <summary>Cell-level overrides, independent of the nested content format overrides.</summary>
+		public CellStylePropertyFlags CellPropertyOverrideFlags { get; set; }
+
 		/// <summary>
 		/// Gets or sets the horizontal inside border style of the cell.
 		/// </summary>
-		public CellBorder HorizontalInsideBorder { get; set; } = new(CellEdgeFlags.InsideHorizontal);
+		public CellBorder HorizontalInsideBorder
+		{
+			get => this._horizontalInsideBorder;
+			set { this.ResourceOwner?.CheckBorderOwner(value); var old = this._horizontalInsideBorder; this._horizontalInsideBorder = value;
+				this.ResourceOwner?.BorderChanged(old, value); }
+		}
+		private CellBorder _horizontalInsideBorder = new(CellEdgeFlags.InsideHorizontal);
 
 		/// <summary>
 		/// Gets or sets the horizontal margin of the cell. Default is <c>0.06</c>.
@@ -149,7 +165,13 @@ public partial class TableStyle
 		/// <summary>
 		/// Gets or sets the left border style of the cell.
 		/// </summary>
-		public CellBorder LeftBorder { get; set; } = new(CellEdgeFlags.Left);
+		public CellBorder LeftBorder
+		{
+			get => this._leftBorder;
+			set { this.ResourceOwner?.CheckBorderOwner(value); var old = this._leftBorder; this._leftBorder = value;
+				this.ResourceOwner?.BorderChanged(old, value); }
+		}
+		private CellBorder _leftBorder = new(CellEdgeFlags.Left);
 
 		/// <summary>
 		/// Gets or sets the horizontal spacing between cell margins.
@@ -176,7 +198,13 @@ public partial class TableStyle
 		/// <summary>
 		/// Gets or sets the right border style of the cell.
 		/// </summary>
-		public CellBorder RightBorder { get; set; } = new(CellEdgeFlags.Right);
+		public CellBorder RightBorder
+		{
+			get => this._rightBorder;
+			set { this.ResourceOwner?.CheckBorderOwner(value); var old = this._rightBorder; this._rightBorder = value;
+				this.ResourceOwner?.BorderChanged(old, value); }
+		}
+		private CellBorder _rightBorder = new(CellEdgeFlags.Right);
 
 		/// <summary>
 		/// Gets or sets the right margin of the cell.
@@ -204,7 +232,13 @@ public partial class TableStyle
 		/// <summary>
 		/// Gets or sets the top border style of the cell.
 		/// </summary>
-		public CellBorder TopBorder { get; set; } = new(CellEdgeFlags.Right);
+		public CellBorder TopBorder
+		{
+			get => this._topBorder;
+			set { this.ResourceOwner?.CheckBorderOwner(value); var old = this._topBorder; this._topBorder = value;
+				this.ResourceOwner?.BorderChanged(old, value); }
+		}
+		private CellBorder _topBorder = new(CellEdgeFlags.Top);
 
 		/// <summary>
 		/// Gets or sets the type of the cell style.
@@ -215,7 +249,13 @@ public partial class TableStyle
 		/// <summary>
 		/// Gets or sets the vertical inside border style of the cell.
 		/// </summary>
-		public CellBorder VerticalInsideBorder { get; set; } = new(CellEdgeFlags.InsideVertical);
+		public CellBorder VerticalInsideBorder
+		{
+			get => this._verticalInsideBorder;
+			set { this.ResourceOwner?.CheckBorderOwner(value); var old = this._verticalInsideBorder; this._verticalInsideBorder = value;
+				this.ResourceOwner?.BorderChanged(old, value); }
+		}
+		private CellBorder _verticalInsideBorder = new(CellEdgeFlags.InsideVertical);
 
 		/// <summary>
 		/// Gets or sets the vertical margin of the cell. Default is <c>0.06</c>.
@@ -226,6 +266,9 @@ public partial class TableStyle
 		/// Gets or sets the internal identifier of the cell style.
 		/// </summary>
 		internal int Id { get; set; }
+
+		// The enclosing TABLESTYLE entry prefix is independent of the cell ID.
+		internal int? RawIndex { get; set; }
 
 		/// <summary>
 		/// The name constant for the default data cell style.
@@ -241,6 +284,22 @@ public partial class TableStyle
 		/// The name constant for the default title cell style.
 		/// </summary>
 		public const string TitleCellStyleName = "_TITLE";
+
+		internal System.Collections.Generic.IEnumerable<CellBorder> Borders
+		{
+			get { yield return TopBorder; yield return RightBorder; yield return BottomBorder;
+				yield return LeftBorder; yield return VerticalInsideBorder; yield return HorizontalInsideBorder; }
+		}
+
+		/// <inheritdoc/>
+		public override ContentFormat Clone()
+		{
+			var clone = (CellStyle)base.Clone();
+			clone._topBorder = this.TopBorder?.Clone(); clone._rightBorder = this.RightBorder?.Clone();
+			clone._bottomBorder = this.BottomBorder?.Clone(); clone._leftBorder = this.LeftBorder?.Clone();
+			clone._verticalInsideBorder = this.VerticalInsideBorder?.Clone(); clone._horizontalInsideBorder = this.HorizontalInsideBorder?.Clone();
+			return clone;
+		}
 
 		/// <inheritdoc/>
 		public override string ToString()

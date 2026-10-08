@@ -102,7 +102,7 @@ internal partial class DwgObjectReader : DwgSectionIO
 
 		//BL 91 Property override flags. The definition is the same as the content format
 		//propery override flags, see paragraph 20.4.101.3.
-		cellStyle.PropertyOverrideFlags = (TableStyle.CellStylePropertyFlags)this._mergedReaders.ReadBitLong();
+		cellStyle.CellPropertyOverrideFlags = (TableStyle.CellStylePropertyFlags)this._mergedReaders.ReadBitLong();
 		//BL  92 Merge flags, but may only for bits 0x8000 and 0x10000.
 		cellStyle.TableCellStylePropertyFlags = (CellStylePropertyFlags)this._mergedReaders.ReadBitLong();
 		//TC 62 Background color

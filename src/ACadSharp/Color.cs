@@ -125,14 +125,25 @@ namespace ACadSharp
 		/// <summary>
 		/// Indexed color.  If the color is stored as a true color, returns -1;
 		/// </summary>
-		public short Index => this.IsTrueColor ? (short)-1 : (short)this._color;
+		public short Index => this.IsNone ? throw new InvalidOperationException("None has no ACI index.")
+			: this.IsTrueColor ? (short)-1 : (short)this._color;
+
+		/// <summary>A color method with no fill/color; distinct from ByEntity (ACI 257).</summary>
+		public static Color None => new Color(true);
+
+		/// <summary>Whether this value represents no color.</summary>
+		public bool IsNone => this._color == _noneFlag;
+
+		private const uint _noneFlag = 0x20000000;
+
+		private Color(bool none) { this._color = _noneFlag; }
 
 		/// <summary>
 		/// Defines if the color is defined by block.
 		/// </summary>
 		public bool IsByBlock
 		{
-			get { return this.Index == 0; }
+			get { return this._color == 0; }
 		}
 
 		/// <summary>
@@ -140,7 +151,7 @@ namespace ACadSharp
 		/// </summary>
 		public bool IsByLayer
 		{
-			get { return this.Index == 256; }
+			get { return this._color == 256; }
 		}
 
 		/// <summary>
@@ -150,7 +161,7 @@ namespace ACadSharp
 		{
 			get
 			{
-				return this._color > 257 || this._color < 0;
+				return !this.IsNone && this._color > 257;
 			}
 		}
 
@@ -565,6 +576,7 @@ namespace ACadSharp
 		/// <returns></returns>
 		public ReadOnlySpan<byte> GetRgb()
 		{
+			if (this.IsNone) throw new InvalidOperationException("None has no RGB components.");
 			if (this.IsTrueColor)
 			{
 				return this.GetTrueColorRgb();
@@ -595,6 +607,7 @@ namespace ACadSharp
 		/// <inheritdoc/>
 		public override string ToString()
 		{
+			if (this.IsNone) return "None";
 			if (this._color == 0)
 			{
 				return "ByBlock";

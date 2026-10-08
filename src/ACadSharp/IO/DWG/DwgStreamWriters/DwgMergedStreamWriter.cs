@@ -160,7 +160,11 @@ namespace ACadSharp.IO.DWG
 
 			byte[] arr = new byte[4];
 
-			if (value.IsTrueColor)
+			if (value.IsNone)
+			{
+				arr[3] = 0xC8;
+			}
+			else if (value.IsTrueColor)
 			{
 				arr[2] = (byte)value.R;
 				arr[1] = (byte)value.G;
@@ -175,6 +179,7 @@ namespace ACadSharp.IO.DWG
 			{
 				arr[3] = 0b1100_0011;
 				arr[0] = (byte)value.Index;
+				arr[1] = (byte)(value.Index >> 8);
 			}
 
 			//BL: RGB value

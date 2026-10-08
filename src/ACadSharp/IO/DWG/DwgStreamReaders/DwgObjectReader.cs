@@ -5294,15 +5294,15 @@ namespace ACadSharp.IO.DWG
 			}
 
 			//RC - Unknown
-			var rc = this._mergedReaders.ReadByte();
+			style.RawHeaderByte = this._mergedReaders.ReadByte();
 			//TV 3 Description
 			style.Description = this._mergedReaders.ReadVariableText();
 			//BL - Unknown
-			var bl1 = this._mergedReaders.ReadBitLong();
+			style.RawHeaderValue1 = this._mergedReaders.ReadBitLong();
 			//BL - Unknown
-			var bl2 = this._mergedReaders.ReadBitLong();
+			style.RawHeaderValue2 = this._mergedReaders.ReadBitLong();
 			//H - Unknown(hard owner)
-			var h = this.handleReference();
+			style.RawHeaderHandle = this.handleReference();
 
 			//… The cell style with name “Table”, see paragraph 20.4.101.4.
 			template.TableCellStyleTemplate = new CadTableStyleTemplate.CadCellStyleTemplate(style.TableCellStyle);
@@ -5327,7 +5327,7 @@ namespace ACadSharp.IO.DWG
 
 				//… The cell style fields, see paragraph 20.4.101.4.
 				//Index starting by 1
-				int unknown = this._mergedReaders.ReadBitLong();
+				cellStyle.RawIndex = this._mergedReaders.ReadBitLong();
 				this.readCellStyle(cellStyleTemplate);
 
 				//BL - Cell style ID, 1 = title, 2 = header, 3 = data, 4 = table (new in R24).

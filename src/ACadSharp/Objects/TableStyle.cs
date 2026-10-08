@@ -1,6 +1,7 @@
 ﻿using ACadSharp.Attributes;
 using ACadSharp.Classes;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 
 namespace ACadSharp.Objects;
 
@@ -23,12 +24,17 @@ public partial class TableStyle : NonGraphicalObject, IDxfClassDefined
 	/// <summary>
 	/// Gets the collection of cell styles applied to the table entity.
 	/// </summary>
-	public List<CellStyle> CellStyles { get; } = new();
+	public Collection<CellStyle> CellStyles { get; private set; }
 
 	/// <summary>
 	/// Gets the style settings applied to data cells within the table entity.
 	/// </summary>
-	public CellStyle DataCellStyle { get; set; } = CellStyle.DefaultDataCellStyle;
+	public CellStyle DataCellStyle
+	{
+		get => this._dataCellStyle;
+		set => this.SetCell(ref this._dataCellStyle, value);
+	}
+	private CellStyle _dataCellStyle = CellStyle.DefaultDataCellStyle;
 
 	/// <summary>
 	/// Table style description.
@@ -54,7 +60,12 @@ public partial class TableStyle : NonGraphicalObject, IDxfClassDefined
 	/// <summary>
 	/// Gets the style settings applied to the header cells of the table.
 	/// </summary>
-	public CellStyle HeaderCellStyle { get; set; } = CellStyle.DefaultHeaderCellStyle;
+	public CellStyle HeaderCellStyle
+	{
+		get => this._headerCellStyle;
+		set => this.SetCell(ref this._headerCellStyle, value);
+	}
+	private CellStyle _headerCellStyle = CellStyle.DefaultHeaderCellStyle;
 
 	/// <summary>
 	/// Gets or sets the horizontal margin, in drawing units, applied to the content within each cell.
@@ -80,9 +91,19 @@ public partial class TableStyle : NonGraphicalObject, IDxfClassDefined
 	[DxfCodeValue(280)]
 	public bool SuppressTitle { get; set; }
 
-	public CellStyle TableCellStyle { get; set; } = CellStyle.DefaultTableCellStyle;
+	public CellStyle TableCellStyle
+	{
+		get => this._tableCellStyle;
+		set => this.SetCell(ref this._tableCellStyle, value);
+	}
+	private CellStyle _tableCellStyle = CellStyle.DefaultTableCellStyle;
 
-	public CellStyle TitleCellStyle { get; set; } = CellStyle.DefaultTitleCellStyle;
+	public CellStyle TitleCellStyle
+	{
+		get => this._titleCellStyle;
+		set => this.SetCell(ref this._titleCellStyle, value);
+	}
+	private CellStyle _titleCellStyle = CellStyle.DefaultTitleCellStyle;
 
 	/// <summary>
 	/// Gets or sets the vertical margin, in drawing units, applied to the content within a cell.
@@ -95,6 +116,12 @@ public partial class TableStyle : NonGraphicalObject, IDxfClassDefined
 	/// </summary>
 	public const string DefaultName = "Standard";
 
+	// Modern DWG fields whose meanings are not established. Preserve read scalars without inferring defaults.
+	internal byte RawHeaderByte { get; set; }
+	internal int RawHeaderValue1 { get; set; }
+	internal int RawHeaderValue2 { get; set; }
+	internal ulong RawHeaderHandle { get; set; }
+
 	/// <summary>
 	/// Initializes a new instance of the <see cref="TableStyle"/> class.
 	/// </summary>
@@ -106,6 +133,8 @@ public partial class TableStyle : NonGraphicalObject, IDxfClassDefined
 	/// </summary>
 	public TableStyle(string name) : base(name)
 	{
+		this.CellStyles = new OwnedCellStyles(this);
+		foreach (var cell in this.AllCells) this.BindCell(cell);
 	}
 
 	/// <inheritdoc/>

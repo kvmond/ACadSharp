@@ -2,15 +2,12 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Xml.Linq;
 
 namespace ACadSharp;
 
 internal class CadObjectReferenceHandler<TKey, TValue>
 {
-	private readonly Dictionary<TKey, HashSet<ReferenceHolder>> _references = new();
-
-	private readonly Dictionary<CadObject, ReferenceHolder> _referencesByOwner = new();
+	private readonly Dictionary<TKey, Dictionary<CadObject, ReferenceHolder>> _references = new();
 
 	public CadObjectReferenceHandler()
 	{
@@ -18,23 +15,21 @@ internal class CadObjectReferenceHandler<TKey, TValue>
 
 	public void AddReference(TKey key, CadObject owner, Action<TValue> assignTo)
 	{
-		if (!this._references.TryGetValue(key, out HashSet<ReferenceHolder> holders))
+		if (!this._references.TryGetValue(key, out Dictionary<CadObject, ReferenceHolder> holders))
 		{
-			holders = new HashSet<ReferenceHolder>();
+			holders = new Dictionary<CadObject, ReferenceHolder>();
 			this._references[key] = holders;
 		}
 
 		var holder = new ReferenceHolder(owner, assignTo);
-		holders.Add(holder);
-		this._referencesByOwner[owner] = holder;
+		holders[owner] = holder;
 	}
 
 	public void RemoveReference(TKey key, CadObject owner)
 	{
-		if (this._references.TryGetValue(key, out HashSet<ReferenceHolder> holders)
-			&& this._referencesByOwner.TryGetValue(owner, out ReferenceHolder holder))
+		if (this._references.TryGetValue(key, out Dictionary<CadObject, ReferenceHolder> holders))
 		{
-			holders.Remove(holder);
+			holders.Remove(owner);
 			if (holders.Count == 0)
 			{
 				this._references.Remove(key);
@@ -44,7 +39,7 @@ internal class CadObjectReferenceHandler<TKey, TValue>
 
 	public void ChangeKey(TKey current, TKey newKey)
 	{
-		if (this._references.Remove(current, out HashSet<ReferenceHolder> holders))
+		if (this._references.Remove(current, out Dictionary<CadObject, ReferenceHolder> holders))
 		{
 			this._references[newKey] = holders;
 		}
@@ -52,9 +47,9 @@ internal class CadObjectReferenceHandler<TKey, TValue>
 
 	public IEnumerable<CadObject> GetReferences(TKey key)
 	{
-		if (this._references.TryGetValue(key, out HashSet<ReferenceHolder> holders))
+		if (this._references.TryGetValue(key, out Dictionary<CadObject, ReferenceHolder> holders))
 		{
-			return holders.Select(h => h.Owner);
+			return holders.Keys;
 		}
 
 		return Enumerable.Empty<CadObject>();
@@ -62,9 +57,9 @@ internal class CadObjectReferenceHandler<TKey, TValue>
 
 	public void RemoveReference(TKey key, TValue value)
 	{
-		if (this._references.Remove(key, out HashSet<ReferenceHolder> holders))
+		if (this._references.Remove(key, out Dictionary<CadObject, ReferenceHolder> holders))
 		{
-			foreach (var holder in holders)
+			foreach (var holder in holders.Values)
 			{
 				holder.AssignTo(value);
 			}

@@ -20,14 +20,18 @@ namespace ACadSharp.IO.DWG
 			uint rgb = (uint)this.ReadBitLong();
 			byte[] arr = LittleEndianConverter.Instance.GetBytes(rgb);
 
-			if (rgb == 0xC0000000)
+			if (rgb == 0xC8000000)
+			{
+				color = Color.None;
+			}
+			else if (rgb == 0xC0000000)
 			{
 				color = Color.ByLayer;
 			}
 			else if ((rgb & 0b0000_0001_0000_0000_0000_0000_0000_0000) != 0)
 			{
 				//Indexed color
-				color = new Color(arr[0]);
+				color = new Color((short)(arr[0] | (rgb >> 24 == 0xC3 ? arr[1] << 8 : 0)));
 			}
 			else
 			{
