@@ -47,7 +47,7 @@ internal abstract partial class DxfSectionWriterBase
 				break;
 			case Insert insert:
 				this.writeInsert(insert);
-				break;
+				return; // The root XDATA precedes its owned ATTRIB/SEQEND records.
 			case Leader leader:
 				this.writeLeader(leader);
 				break;
@@ -96,7 +96,7 @@ internal abstract partial class DxfSectionWriterBase
 					default:
 						throw new NotImplementedException($"Polyline not implemented {polyline.GetType().FullName}");
 				}
-				break;
+				return; // The root XDATA precedes its owned VERTEX/SEQEND records.
 			case RasterImage rasterImage:
 				this.writeCadImage(rasterImage);
 				break;
@@ -670,11 +670,12 @@ internal abstract partial class DxfSectionWriterBase
 		this._writer.Write(210, insert.Normal, map);
 
 		if (insert.HasAttributes)
-		{
 			this._writer.Write(66, 1);
 
-			//WARNING: Write extended data before attributes
+		this.writeExtendedData(insert.ExtendedData);
 
+		if (insert.HasAttributes)
+		{
 			foreach (var att in insert.Attributes)
 			{
 				this.writeEntity(att);
@@ -1181,6 +1182,8 @@ internal abstract partial class DxfSectionWriterBase
 
 		this._writer.Write(210, polyline.Normal, map);
 
+		this.writeExtendedData(polyline.ExtendedData);
+
 		if (polyline.Vertices.Any())
 		{
 			foreach (T v in polyline.Vertices)
@@ -1219,6 +1222,7 @@ internal abstract partial class DxfSectionWriterBase
 		this._writer.Write(DxfCode.Subclass, DxfSubclassMarker.Entity);
 		this._writer.Write(8, seqend.Layer.Name);
 		this.writePlotStyle(seqend);
+		this.writeExtendedData(seqend.ExtendedData);
 	}
 
 	private void writeShape(Shape shape)

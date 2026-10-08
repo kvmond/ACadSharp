@@ -78,23 +78,23 @@ namespace ACadSharp.IO.Templates
 			}
 			else
 			{
+				// Set the parsed SEQEND before the first vertex registers the collection,
+				// including PolyfaceMesh's separate vertex/face build path.
+				foreach (var handle in this.OwnedObjectsHandlers)
+				{
+					if (builder.TryGetCadObject(handle, out Seqend s))
+					{
+						this.setSeqend(builder, s);
+						break;
+					}
+				}
+
 				if (this.CadObject is PolyfaceMesh mesh)
 				{
 					this.buildPolyfaceMesh(mesh, builder);
 				}
 				else
 				{
-					//The SEQEND is set before the vertices are added: adding the first vertex registers the polyline's
-					//SEQEND, and one set later is not written.
-					foreach (var handle in this.OwnedObjectsHandlers)
-					{
-						if (builder.TryGetCadObject(handle, out Seqend s))
-						{
-							this.setSeqend(builder, s);
-							break;
-						}
-					}
-
 					foreach (var handle in this.OwnedObjectsHandlers)
 					{
 						if (builder.TryGetCadObject(handle, out Vertex v))

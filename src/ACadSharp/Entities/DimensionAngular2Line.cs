@@ -29,6 +29,22 @@ namespace ACadSharp.Entities
 		{
 			get
 			{
+				// Coplanar WCS XY definitions have one exact 2D intersection. The general
+				// 3D helper compares independently rounded closest points for exact equality,
+				// which can produce NaN and the wrong supplementary angular measurement.
+				if (this.FirstPoint.Z == this.SecondPoint.Z && this.FirstPoint.Z == this.AngleVertex.Z
+					&& this.FirstPoint.Z == this.DefinitionPoint.Z)
+				{
+					XY firstDirection = (XY)(this.SecondPoint - this.FirstPoint);
+					XY secondDirection = (XY)(this.DefinitionPoint - this.AngleVertex);
+					if (firstDirection.IsZero() || secondDirection.IsZero())
+						return XYZ.NaN;
+					Line2D first = Line2D.FromPoints((XY)this.FirstPoint, (XY)this.SecondPoint);
+					Line2D second = Line2D.FromPoints((XY)this.AngleVertex, (XY)this.DefinitionPoint);
+					XY intersection = first.FindIntersection(second);
+					return new XYZ(intersection.X, intersection.Y, this.FirstPoint.Z);
+				}
+
 				Line3D l1 = LineExtensions.CreateFromPoints<Line3D, XYZ>(this.DefinitionPoint, this.AngleVertex);
 				Line3D l2 = LineExtensions.CreateFromPoints<Line3D, XYZ>(this.FirstPoint, this.SecondPoint);
 
