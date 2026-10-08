@@ -11,6 +11,35 @@ namespace ACadSharp.Tests.IO;
 
 public class OfficeRoundtripTests
 {
+    [Theory]
+    [InlineData(ACadVersion.AC1014)]
+    [InlineData(ACadVersion.AC1015)]
+    [InlineData(ACadVersion.AC1018)]
+    [InlineData(ACadVersion.AC1024)]
+    [InlineData(ACadVersion.AC1027)]
+    [InlineData(ACadVersion.AC1032)]
+    public void ModelAndPaperLayoutLimitsKeepTheirOwnCoordinates(ACadVersion version)
+    {
+        var source = new CadDocument(); source.Header.Version = version;
+        var index = 0;
+        foreach (var layout in source.Layouts)
+        {
+            layout.MinLimits = new CSMath.XY(-13.125 - index, 7.75 + index);
+            layout.MaxLimits = new CSMath.XY(812.5 + index, -65.375 - index);
+            index++;
+        }
+        Assert.Contains(source.Layouts, l => l.IsPaperSpace);
+        Assert.Contains(source.Layouts, l => !l.IsPaperSpace);
+        var expected = source.Layouts.ToDictionary(l => l.Handle, l => (l.Name, l.MinLimits, l.MaxLimits));
+        var current = source;
+        for (var generation = 0; generation < 2; generation++)
+        {
+            current = Copy(current, "dwg");
+            Assert.Equal(expected.OrderBy(p => p.Key), current.Layouts.ToDictionary(l => l.Handle, l => (l.Name, l.MinLimits, l.MaxLimits)).OrderBy(p => p.Key));
+        }
+        Assert.Equal(expected.OrderBy(p => p.Key), source.Layouts.ToDictionary(l => l.Handle, l => (l.Name, l.MinLimits, l.MaxLimits)).OrderBy(p => p.Key));
+    }
+
     private static CadDocument Copy(CadDocument doc, string format)
     {
         using var output = new MemoryStream();

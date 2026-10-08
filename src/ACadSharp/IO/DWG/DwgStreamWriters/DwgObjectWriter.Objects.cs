@@ -1319,7 +1319,7 @@ internal partial class DwgObjectWriter : DwgSectionIO
 		//Limmin 2RD 10 layout minimum limits
 		this._writer.Write2RawDouble(layout.MinLimits);
 		//Limmax 2RD 11 layout maximum limits
-		this._writer.Write2RawDouble(layout.MinLimits);
+		this._writer.Write2RawDouble(layout.MaxLimits);
 		//Inspoint 3BD 12 layout insertion base point
 		this._writer.Write3BitDouble(layout.InsertionBasePoint);
 		this._writer.Write3BitDouble(layout.XAxis);
