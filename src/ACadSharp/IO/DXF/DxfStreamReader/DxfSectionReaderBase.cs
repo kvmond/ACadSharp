@@ -398,6 +398,11 @@ internal abstract class DxfSectionReaderBase
 
 		switch (this._reader.Code)
 		{
+			// Text generation flags and the modern multiline attribute type both use code 71.
+			// Legacy files have no multiline type here and may omit subclass markers entirely.
+			case 71 when this.currentSubclass == DxfSubclassMarker.Text
+				|| string.IsNullOrEmpty(this.currentSubclass) || this._builder.Version <= ACadVersion.AC1027:
+				return this.readTextEntity(template, map, DxfSubclassMarker.Text);
 			case 44:
 			case 46:
 				return true;

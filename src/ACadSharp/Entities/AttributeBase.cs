@@ -29,7 +29,24 @@ public abstract class AttributeBase : TextEntity
 	/// <summary>
 	/// Gets or sets the multi-line text content associated with this object.
 	/// </summary>
-	public MText MText { get; set; }
+	public MText MText
+	{
+		get { return this._mText; }
+		set
+		{
+			if (ReferenceEquals(this._mText, value))
+				return;
+
+			// An embedded child is not a standalone entity. Never steal a child or table references
+			// from another registered entity/document when replacing the content.
+			MText text = value?.Document == null ? value : value.CloneTyped();
+			if (this.Document != null && this._mText?.Document == this.Document)
+				this._mText.UnassignDocument();
+			this._mText = text;
+			if (this.Document != null)
+				this._mText?.AssignDocument(this.Document);
+		}
+	}
 
 	/// <summary>
 	/// Specifies the tag string of the object
@@ -65,8 +82,34 @@ public abstract class AttributeBase : TextEntity
 
 	private string _tag = string.Empty;
 
+	private MText _mText;
+
 	public AttributeBase() : base()
 	{
+	}
+
+	/// <inheritdoc/>
+	public override CadObject Clone()
+	{
+		AttributeBase clone = (AttributeBase)base.Clone();
+		clone._mText = this.MText?.CloneTyped();
+		return clone;
+	}
+
+	internal override void AssignDocument(CadDocument doc)
+	{
+		// A detached attribute may have been given an already registered MTEXT instance.
+		if (this._mText?.Document != null)
+			this._mText = this._mText.CloneTyped();
+		base.AssignDocument(doc);
+		// Register the child's table references, without allocating an object-map entry or handle.
+		this._mText?.AssignDocument(doc);
+	}
+
+	internal override void UnassignDocument()
+	{
+		this._mText?.UnassignDocument();
+		base.UnassignDocument();
 	}
 
 	protected void matchAttributeProperties(AttributeBase src)
@@ -101,6 +144,7 @@ public abstract class AttributeBase : TextEntity
 		this.Flags = src.Flags;
 		this.AttributeType = src.AttributeType;
 		this.IsLocked = src.IsLocked;
+		this.MText = src.MText?.CloneTyped();
 
 		this.InsertPoint = src.InsertPoint;
 	}

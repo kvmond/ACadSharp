@@ -1316,6 +1316,8 @@ internal abstract partial class DxfSectionWriterBase
 
 		this._writer.Write(DxfCode.Subclass, DxfSubclassMarker.Text);
 
+		this._writer.Write(39, text.Thickness, map);
+
 		this._writer.Write(1, text.Value, map);
 
 		this._writer.Write(10, text.InsertPoint, map);
