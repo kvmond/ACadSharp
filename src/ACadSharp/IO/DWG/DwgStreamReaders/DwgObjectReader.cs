@@ -744,30 +744,7 @@ namespace ACadSharp.IO.DWG
 			this._mergedReaders = new DwgMergedReader(this._objectReader, this._textReader, this._handlesReader);
 		}
 
-		private static bool looksLikeUtf16Le(byte[] buffer, int offset)
-		{
-			if (buffer == null || offset < 0 || offset + 1 >= buffer.Length)
-				return false;
 
-			bool sawNonZero = false;
-
-			for (int i = offset; i + 1 < buffer.Length; i += 2)
-			{
-				byte lo = buffer[i];
-				byte hi = buffer[i + 1];
-
-				if (lo == 0 && hi == 0)
-					return sawNonZero;
-
-				if (hi != 0)
-					return false;
-
-				if (lo != 0)
-					sawNonZero = true;
-			}
-
-			return false;
-		}
 
 		private CadTemplate read3dFace()
 		{
@@ -2726,62 +2703,13 @@ namespace ACadSharp.IO.DWG
 
 		private void readLineTypeSegmentTexts(IList<CadLineTypeTemplate.SegmentTemplate> segments, byte[] textArea)
 		{
-			if (segments == null || textArea == null || textArea.Length == 0)
-				return;
-
-			Encoding encoding = this._reader?.Encoding ?? Encoding.ASCII;
-
 			foreach (var segment in segments)
 			{
-				if (!segment.Segment.Flags.HasFlag(LineTypeShapeFlags.Text))
-					continue;
-
+				if (!segment.Segment.Flags.HasFlag(LineTypeShapeFlags.Text)) continue;
 				int offset = (ushort)segment.Segment.ShapeNumber;
-				if (offset >= textArea.Length)
-				{
-					this._builder.Notify(
-						$"Unable to read linetype text segment; offset {offset} is outside the available buffer ({textArea.Length} bytes).",
-						NotificationType.Warning);
-					segment.Segment.Text = string.Empty;
-					segment.Segment.ShapeNumber = 0;
-					continue;
-				}
-
-				segment.Segment.Text = this.readLineTypeTextString(textArea, offset, encoding);
+				segment.Segment.Text = DwgLineTypeText.Read(textArea, offset, this._version, this._reader.Encoding);
 				segment.Segment.ShapeNumber = 0;
 			}
-		}
-
-		private string readLineTypeTextString(byte[] buffer, int offset, Encoding encoding)
-		{
-			if (buffer == null || encoding == null || offset < 0 || offset >= buffer.Length)
-				return string.Empty;
-
-			if (encoding.IsSingleByte && looksLikeUtf16Le(buffer, offset))
-			{
-				// Trim trailing 0x0000 terminator if present.
-				int end = offset;
-				while (end + 1 < buffer.Length)
-				{
-					if (buffer[end] == 0 && buffer[end + 1] == 0)
-						break;
-
-					end += 2;
-				}
-
-				return Encoding.Unicode.GetString(buffer, offset, end - offset);
-			}
-
-			int endAscii = offset;
-			while (endAscii < buffer.Length && buffer[endAscii] != 0)
-			{
-				endAscii++;
-			}
-
-			if (endAscii == offset)
-				return string.Empty;
-
-			return encoding.GetString(buffer, offset, endAscii - offset);
 		}
 
 		private CadTemplate readLType()

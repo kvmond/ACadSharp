@@ -17,6 +17,12 @@ namespace ACadSharp.IO.Templates
 				{
 					this.Segment.Style = style;
 				}
+				else if (this.StyleHandle.HasValue && this.StyleHandle.Value != 0
+					&& (this.Segment.Flags & (LineTypeShapeFlags.Text | LineTypeShapeFlags.Shape)) != 0)
+				{
+					string message = $"Linetype segment refers to missing or non-STYLE object {this.StyleHandle.Value:X}.";
+					builder.Notify(message, NotificationType.Error, new System.IO.InvalidDataException(message));
+				}
 			}
 		}
 

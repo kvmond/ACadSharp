@@ -1533,7 +1533,8 @@ public abstract class WriterSingleObjectTests : IOTestsBase
 
 			TextStyle style = new TextStyle("custom");
 
-			//this.Document.Header.CodePage = "GB2312";
+			// This fixture contains Chinese text; pre-2007 DWG must use a representable code page.
+			this.Document.Header.CodePage = "ANSI_936";
 			style.Filename = "romans.shx";
 			style.BigFontFilename = "chineset.shx";
 			this.Document.TextStyles.Add(style);

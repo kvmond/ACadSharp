@@ -1259,127 +1259,33 @@ internal partial class DwgObjectWriter : DwgSectionIO
 
 	private void writeLineType(LineType ltype)
 	{
+		var segments = ltype.Segments.ToArray();
+		// Validate the complete bounded text area before writing this record. Never change model ShapeNumber.
+		byte[] textArea = DwgLineTypeText.Prepare(segments, this._version, this._writer.Encoding, out short[] offsets);
 		this.writeCommonNonEntityData(ltype);
-
-		//Common:
-		//Entry name TV 2
 		this._writer.WriteVariableText(ltype.Name);
-
 		this.writeXrefDependantBit(ltype);
-
-		//Description TV 3
 		this._writer.WriteVariableText(ltype.Description);
-		//Pattern Len BD 40
 		this._writer.WriteBitDouble(ltype.PatternLength);
-		//Alignment RC 72 Always 'A'.
 		this._writer.WriteByte((byte)ltype.Alignment);
-
-		//Numdashes RC 73 The number of repetitions of the 49...74 data.
-		this._writer.WriteByte((byte)ltype.Segments.Count());
-
-		bool hasTextSegments = false;
-		foreach (LineType.Segment segment in ltype.Segments)
+		this._writer.WriteByte((byte)segments.Length);
+		for (int i = 0; i < segments.Length; i++)
 		{
-			if (segment.Flags.HasFlag(LineTypeShapeFlags.Text))
-			{
-				hasTextSegments = true;
-				break;
-			}
-		}
-
-		Encoding textEncoding = this.R2007Plus ? Encoding.Unicode : this._writer.Encoding;
-
-		byte[] textArea = null;
-		int textCursor = 0;
-		byte[] textTerminator = textEncoding.GetBytes("\0");
-
-		if (this._version <= ACadVersion.AC1018)
-		{
-			textArea = new byte[256];
-			if (this._version <= ACadVersion.AC1014)
-				textCursor = 1;
-		}
-		else if (this.R2007Plus && hasTextSegments)
-		{
-			textArea = new byte[512];
-		}
-
-		foreach (LineType.Segment segment in ltype.Segments)
-		{
-			if (segment.Flags.HasFlag(LineTypeShapeFlags.Text))
-			{
-				if (textArea == null || string.IsNullOrEmpty(segment.Text))
-				{
-					segment.ShapeNumber = 0;
-				}
-				else
-				{
-					byte[] textBytes = textEncoding.GetBytes(segment.Text);
-					int required = textBytes.Length + textTerminator.Length;
-
-					if (textCursor + required <= textArea.Length)
-					{
-						segment.ShapeNumber = (short)textCursor;
-						Buffer.BlockCopy(textBytes, 0, textArea, textCursor, textBytes.Length);
-						textCursor += textBytes.Length;
-						Buffer.BlockCopy(textTerminator, 0, textArea, textCursor, textTerminator.Length);
-						textCursor += textTerminator.Length;
-					}
-					else
-					{
-						segment.ShapeNumber = 0;
-					}
-				}
-			}
-
-			//Dash length BD 49 Dash or dot specifier.
+			var segment = segments[i];
 			this._writer.WriteBitDouble(segment.Length);
-			//Complex shapecode BS 75 Shape number if shapeflag is 2, or index into the string area if shapeflag is 4.
-			this._writer.WriteBitShort(segment.ShapeNumber);
-
-			//X - offset RD 44 (0.0 for a simple dash.)
-			//Y - offset RD 45(0.0 for a simple dash.)
+			this._writer.WriteBitShort(offsets[i]);
 			this._writer.WriteRawDouble(segment.Offset.X);
 			this._writer.WriteRawDouble(segment.Offset.Y);
-
-			//Scale BD 46 (1.0 for a simple dash.)
 			this._writer.WriteBitDouble(segment.Scale);
-			//Rotation BD 50 (0.0 for a simple dash.)
 			this._writer.WriteBitDouble(segment.Rotation);
-			//Shapeflag BS 74 bit coded:
 			this._writer.WriteBitShort((short)segment.Flags);
 		}
-
-		//R2004 and earlier:
-		if (this._version <= ACadVersion.AC1018)
-		{
-			byte[] buffer = textArea ?? new byte[256];
-			for (int i = 0; i < buffer.Length; i++)
-			{
-				this._writer.WriteByte(buffer[i]);
-			}
-		}
-
-		//R2007+:
-		if (this.R2007Plus && hasTextSegments)
-		{
-			byte[] buffer = textArea ?? new byte[512];
-			for (int i = 0; i < buffer.Length; i++)
-			{
-				this._writer.WriteByte(buffer[i]);
-			}
-		}
-
-		//Common:
-		//External reference block handle(hard pointer)
+		// Always 256 bytes before R2007; 512 UTF-16 bytes only when modern records contain text.
+		if (textArea != null)
+			foreach (byte value in textArea) this._writer.WriteByte(value);
 		this._writer.HandleReference(DwgReferenceType.HardPointer, 0);
-
-		foreach (var segment in ltype.Segments)
-		{
-			//340 shapefile for dash/shape (1 each) (hard pointer)
+		foreach (var segment in segments)
 			this._writer.HandleReference(DwgReferenceType.HardPointer, segment.Style);
-		}
-
 		this.registerObject(ltype);
 	}
 
