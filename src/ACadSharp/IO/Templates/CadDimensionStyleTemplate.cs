@@ -64,7 +64,13 @@ namespace ACadSharp.IO.Templates
 				this.CadObject.LineTypeExt2 = linetTypeEx2;
 			}
 
-			if (this.getTableReference(builder, this.DIMLDRBLK, this.DIMBL_Name, out BlockRecord leaderArrow))
+			// DIMBL_Name is the R13/R14 (and obsolete DXF group 5) DIMBLK name; the leader arrow has no name form.
+			if (this.getTableReference(builder, this.DIMBLK, this.DIMBL_Name, out BlockRecord arrow))
+			{
+				this.CadObject.ArrowBlock = arrow;
+			}
+
+			if (this.getTableReference(builder, this.DIMLDRBLK, null, out BlockRecord leaderArrow))
 			{
 				this.CadObject.LeaderArrow = leaderArrow;
 			}

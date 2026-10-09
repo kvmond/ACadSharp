@@ -118,7 +118,7 @@ namespace ACadSharp.IO.DWG
 
 			if (builder.TryGetCadObject(this.DIMLDRBLK, out record))
 			{
-				header.DimensionBlockName = record.Name;
+				header.ArrowBlockName = record.Name;
 			}
 
 			if (builder.TryGetCadObject(this.DIMBLK1, out record))
