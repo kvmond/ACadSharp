@@ -2716,14 +2716,24 @@ internal class DxfObjectsSectionReader : DxfSectionReaderBase
 					}
 				}
 
+				// Air CAD (S33a): the first 12 values are the inverse block transform, the second 12 the clip boundary
+				// transform. The flag was only ever set in the branch that required it, so both went to the first matrix.
+				// Each group of 4 fills one row (M_k0..M_k3), as the DWG reader and both writers lay the matrix out; the
+				// column-first Matrix4(double[]) constructor transposed it.
+				var matrix = Matrix4.Identity;
+				for (int i = 0; i < 12; i++)
+				{
+					matrix[i / 4, i % 4] = array[i];
+				}
+
 				if (tmp.InsertTransformRead)
 				{
-					filter.InsertTransform = new Matrix4(array);
-					tmp.InsertTransformRead = true;
+					filter.InsertTransform = matrix;
 				}
 				else
 				{
-					filter.InverseInsertTransform = new Matrix4(array);
+					filter.InverseInsertTransform = matrix;
+					tmp.InsertTransformRead = true;
 				}
 
 				return true;
