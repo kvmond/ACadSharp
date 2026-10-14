@@ -1210,7 +1210,7 @@ internal partial class DwgObjectWriter : DwgSectionIO
 				values |= 0b10;
 
 			//frozen by default in new viewports (4 bit)
-			if (layer.Flags.HasFlag(LayerFlags.Frozen))
+			if (layer.Flags.HasFlag(LayerFlags.FrozenNewViewports))
 				values |= 0b100;
 
 			//locked (8 bit)
