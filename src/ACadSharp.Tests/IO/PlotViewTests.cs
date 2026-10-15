@@ -46,6 +46,7 @@ public class PlotViewTests
 		var layout = document.Layouts[Layout.PaperLayoutName];
 		layout.PlotType = PlotType.View;
 		layout.PlotView = view;
+		Assert.Equal("BY-OBJECT", layout.PlotViewName); // the object gives the name
 
 		using var stream = new MemoryStream();
 		DwgWriter.Write(stream, document);

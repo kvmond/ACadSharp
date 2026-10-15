@@ -143,9 +143,23 @@ public class PlotSettings : NonGraphicalObject, IDxfClassDefined
 
 	/// <summary>
 	/// The named view a plot area <see cref="PlotType.View"/> plots: R2004 and later DWG keep it by handle, DXF and older
-	/// DWG by <see cref="PlotViewName"/>. Read from either; written from it, or from the name when it is not set (AirCad).
+	/// DWG by <see cref="PlotViewName"/>. Read from either; written from it, or from the name when it is not set. Setting it
+	/// sets the name too, so both say the same (AirCad).
 	/// </summary>
-	public Tables.View PlotView { get; set; }
+	public Tables.View PlotView
+	{
+		get { return this._plotView; }
+		set
+		{
+			this._plotView = value;
+			if (value != null)
+			{
+				this.PlotViewName = value.Name;
+			}
+		}
+	}
+
+	private Tables.View _plotView;
 
 	/// <summary>
 	/// The visual style the layout plots with (R2007 and later DWG, a soft pointer), kept as read (AirCad).
