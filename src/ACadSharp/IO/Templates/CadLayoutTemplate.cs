@@ -5,8 +5,12 @@ using System.Collections.Generic;
 
 namespace ACadSharp.IO.Templates
 {
-	internal class CadLayoutTemplate : CadTemplate<Layout>
+	internal class CadLayoutTemplate : CadTemplate<Layout>, ICadPlotSettingsTemplate
 	{
+		public ulong? PlotViewHandle { get; set; }
+
+		public ulong? VisualStyleHandle { get; set; }
+
 		public ulong? PaperSpaceBlockHandle { get; set; }
 
 		public ulong? ActiveViewportHandle { get; set; }
@@ -26,6 +30,8 @@ namespace ACadSharp.IO.Templates
 		protected override void build(CadDocumentBuilder builder)
 		{
 			base.build(builder);
+
+			CadPlotSettingsLinks.Build(builder, this.CadObject, this);
 
 			if (builder.TryGetCadObject(this.PaperSpaceBlockHandle, out BlockRecord record))
 			{

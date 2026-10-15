@@ -142,6 +142,17 @@ public class PlotSettings : NonGraphicalObject, IDxfClassDefined
 	public string PlotViewName { get; set; }
 
 	/// <summary>
+	/// The named view a plot area <see cref="PlotType.View"/> plots: R2004 and later DWG keep it by handle, DXF and older
+	/// DWG by <see cref="PlotViewName"/>. Read from either; written from it, or from the name when it is not set (AirCad).
+	/// </summary>
+	public Tables.View PlotView { get; set; }
+
+	/// <summary>
+	/// The visual style the layout plots with (R2007 and later DWG, a soft pointer), kept as read (AirCad).
+	/// </summary>
+	public VisualStyle VisualStyle { get; set; }
+
+	/// <summary>
 	/// Gets the scale factor.
 	/// </summary>
 	public double PrintScale

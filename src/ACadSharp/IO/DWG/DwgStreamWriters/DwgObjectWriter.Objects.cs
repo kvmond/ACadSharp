@@ -2065,7 +2065,7 @@ internal partial class DwgObjectWriter : DwgSectionIO
 		if (this._version >= ACadVersion.AC1012 && this._version <= ACadVersion.AC1015)
 		{
 			//Plot view name T 6 plotsettings plot view name
-			this._writer.WriteVariableText(plot.PlotViewName);
+			this._writer.WriteVariableText(plot.PlotView?.Name ?? plot.PlotViewName);
 		}
 
 		//Common:
@@ -2092,15 +2092,20 @@ internal partial class DwgObjectWriter : DwgSectionIO
 			//Shade plot custom DPI BS 78
 			this._writer.WriteBitShort(plot.ShadePlotDPI);
 
-			//6 plot view handle(hard pointer)
-			this._writer.HandleReference(DwgReferenceType.HardPointer, null);
+			//6 plot view handle(hard pointer): the view, or the one the name gives (AirCad)
+			var plotView = plot.PlotView;
+			if (plotView == null && !string.IsNullOrEmpty(plot.PlotViewName) && this._document.Views.TryGetValue(plot.PlotViewName, out var named))
+			{
+				plotView = named;
+			}
+			this._writer.HandleReference(DwgReferenceType.HardPointer, plotView);
 		}
 
 		//R2007 +:
 		if (this.R2007Plus)
 		{
-			//Visual Style handle(soft pointer)
-			this._writer.HandleReference(DwgReferenceType.SoftPointer, null);
+			//Visual Style handle(soft pointer): as read (AirCad)
+			this._writer.HandleReference(DwgReferenceType.SoftPointer, plot.VisualStyle);
 		}
 	}
 

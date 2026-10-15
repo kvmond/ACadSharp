@@ -2375,7 +2375,7 @@ namespace ACadSharp.IO.DWG
 
 			this.readCommonNonEntityData(template);
 
-			this.readPlotSettings(layout);
+			this.readPlotSettings(layout, template);
 
 			//Common:
 			//Layout name TV 1 layout name
@@ -4584,12 +4584,12 @@ namespace ACadSharp.IO.DWG
 
 			this.readCommonNonEntityData(template);
 
-			this.readPlotSettings(plotsettings);
+			this.readPlotSettings(plotsettings, template);
 
 			return template;
 		}
 
-		private void readPlotSettings(PlotSettings plot)
+		private void readPlotSettings(PlotSettings plot, ICadPlotSettingsTemplate template)
 		{
 			//Common:
 			//Page setup name TV 1 plotsettings page setup name
@@ -4667,14 +4667,14 @@ namespace ACadSharp.IO.DWG
 				//Shade plot custom DPI BS 78
 				plot.ShadePlotDPI = this._objectReader.ReadBitShort();
 
-				//6 plot view handle(hard pointer)
-				ulong plotViewHandle = this.handleReference();
+				//6 plot view handle(hard pointer): kept for the template to link (AirCad)
+				template.PlotViewHandle = this.handleReference();
 			}
 
 			//R2007 +:
 			if (this.R2007Plus)
-				//Visual Style handle(soft pointer)
-				this.handleReference();
+				//Visual Style handle(soft pointer): kept for the template to link (AirCad)
+				template.VisualStyleHandle = this.handleReference();
 		}
 
 		private CadTemplate readPoint()
