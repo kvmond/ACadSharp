@@ -1800,6 +1800,10 @@ internal abstract class DxfSectionReaderBase
 			case 331:
 				tmp.FrozenLayerHandles.Add(this._reader.ValueAsHandle);
 				return true;
+			//Clipping boundary of a non-rectangular viewport (handles are not assigned by the map, so it was dropped)
+			case 340:
+				tmp.BoundaryHandle = this._reader.ValueAsHandle;
+				return true;
 			case 348:
 				tmp.VisualStyleHandle = this._reader.ValueAsHandle;
 				return true;
