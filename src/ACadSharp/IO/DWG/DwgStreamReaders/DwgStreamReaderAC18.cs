@@ -114,8 +114,10 @@ namespace ACadSharp.IO.DWG
 			}
 			else
 			{
+				//A color number 0 has no flags: ByBlock, and without 0x2000 no transparency follows, so ByLayer as in the
+				//branch above. AutoCAD writes ByBlock with ByLayer transparency this way (Air CAD F5-1).
 				color = Color.ByBlock;
-				transparency = Transparency.Opaque;
+				transparency = Transparency.ByLayer;
 			}
 
 			return color;
