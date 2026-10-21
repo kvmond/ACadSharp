@@ -111,6 +111,9 @@ internal class CadEntityTemplate : CadTemplate<Entity>
 			builder.DocumentToBuild.Colors.TryGet(this.BookColorName, out color))
 		{
 			this.CadObject.BookColor = color;
+			//A DXF keeps the book's RGB in 62/420 for readers that know no color books; a DWG leaves the ByBlock placeholder beside the
+			//reference. Both read as the same entity (and the DWG written from it holds no RGB beside the reference).
+			this.CadObject.Color = Color.ByBlock;
 		}
 
 		if (builder.TryGetCadObject(this.MaterialHandle, out Material material))

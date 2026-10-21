@@ -133,7 +133,9 @@ namespace ACadSharp.IO.DWG
 
 			base.WriteBitShort((short)size);
 
-			if (color.IsTrueColor)
+			//A color-book color carries its reference in the handle stream and no RGB: the reader (ReadEnColor) reads none after 0x4000, so an
+			//entity read from a DXF (which keeps the book's RGB as its own color) must not write one either, or the entity's data is shifted.
+			if (color.IsTrueColor && !isBookColor)
 			{
 				byte[] arr = new byte[] { color.B, color.G, color.R, 0b11000010 };
 				uint rgb = LittleEndianConverter.Instance.ToUInt32(arr);
