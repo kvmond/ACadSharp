@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using ACadSharp.Classes;
 using ACadSharp.Exceptions;
 using ACadSharp.IO.DWG;
 using ACadSharp.IO.DWG.DwgStreamReaders;
@@ -171,6 +172,118 @@ public class DwgReader : CadReaderBase<DwgReaderConfiguration>
 	public IReadOnlyDictionary<ulong, long> ReadObjectMap()
 	{
 		return this.readHandles();
+	}
+
+	/// <summary>
+	/// Read the type of the objects with the given handles: the type <see cref="Read()"/> reads at an object's offset in the
+	/// object map before it reads the object itself (the same code reads both). Nothing is added to a document and no
+	/// notification is sent.
+	/// </summary>
+	/// <remarks>
+	/// <para>A fixed type is the name of its <see cref="ObjectType"/>, the text of the "Object type not implemented: {type}"
+	/// notification. Any other number is a class number, as the object reader takes it (the numbers of the file's classes start
+	/// at 500): the DXF name of that class in the classes section of the file, or "class {number}" when the section does not
+	/// have it. A handle that is not in the object map, or whose position cannot be read, is "?".</para>
+	/// <para>Refers to the AcDb:Handles, AcDb:Classes and AcDb:AcDbObjects data sections.</para>
+	/// </remarks>
+	/// <param name="handles">The handles to read the type of.</param>
+	/// <returns>The type name of each handle given.</returns>
+	public IReadOnlyDictionary<ulong, string> ReadObjectTypes(IEnumerable<ulong> handles)
+	{
+		if (handles == null)
+		{
+			throw new ArgumentNullException(nameof(handles));
+		}
+
+		this._fileHeader = this._fileHeader ?? this.readFileHeader();
+
+		Dictionary<ulong, long> map = this.readHandles();
+		var result = new Dictionary<ulong, string>();
+		var classes = new DxfClassCollection(this._document);
+		DwgObjectReader objectReader = null;
+		bool started = false;
+		foreach (ulong handle in handles)
+		{
+			if (!map.TryGetValue(handle, out long offset))
+			{
+				result[handle] = _unreadableObjectType;
+				continue;
+			}
+
+			if (!started)
+			{
+				started = true;
+				objectReader = this.createObjectTypeReader(map, classes);
+			}
+
+			try
+			{
+				result[handle] = objectReader == null
+					? _unreadableObjectType
+					: objectTypeName(objectReader.getEntityType(offset), classes);
+			}
+			catch (Exception ex) when (ex is not OutOfMemoryException)
+			{
+				result[handle] = _unreadableObjectType;
+			}
+		}
+
+		return result;
+	}
+
+	/// <summary>
+	/// The object reader <see cref="ReadObjectTypes"/> asks for types, over the same objects stream <see cref="readObjects"/>
+	/// reads. The classes are read into <paramref name="classes"/>, not into the document. Null when the stream cannot be opened.
+	/// </summary>
+	private DwgObjectReader createObjectTypeReader(Dictionary<ulong, long> map, DxfClassCollection classes)
+	{
+		try
+		{
+			try
+			{
+				this.readClasses(classes, false);
+			}
+			catch (Exception ex) when (ex is not OutOfMemoryException)
+			{
+				// A file whose classes cannot be read still names its fixed types; the unlisted ones are named by number.
+			}
+
+			// No document is built here, so the reader needs no builder.
+			return new DwgObjectReader(
+				this._fileHeader.AcadVersion,
+				null,
+				this.getObjectsStream(),
+				new Queue<ulong>(),
+				map,
+				classes);
+		}
+		catch (Exception ex) when (ex is not OutOfMemoryException)
+		{
+			return null;
+		}
+	}
+
+	private const string _unreadableObjectType = "?";
+
+	/// <summary>
+	/// The name <see cref="ReadObjectTypes"/> gives a type: the name of a fixed <see cref="ObjectType"/>; for any other number,
+	/// the way <see cref="DwgObjectReader"/> takes it, as a class number, the DXF name of the class or "class {number}".
+	/// </summary>
+	internal static string objectTypeName(ObjectType type, IEnumerable<DxfClass> classes)
+	{
+		if (type == ObjectType.INVALID)
+		{
+			return _unreadableObjectType;
+		}
+
+		if (Enum.IsDefined(typeof(ObjectType), type))
+		{
+			return type.ToString();
+		}
+
+		short number = (short)type;
+		DxfClass dxfClass = classes.FirstOrDefault(c => c.ClassNumber == number);
+		return dxfClass != null && !string.IsNullOrEmpty(dxfClass.DxfName) ? dxfClass.DxfName : $"class {number}";
 	}
 
 	/// <summary>
@@ -572,6 +685,16 @@ public class DwgReader : CadReaderBase<DwgReaderConfiguration>
 	/// <returns></returns>
 	private void readClasses()
 	{
+		this.readClasses(this._document.Classes, true);
+	}
+
+	/// <summary>
+	/// Read the classes section of the file into <paramref name="classes"/>.
+	/// </summary>
+	/// <param name="classes">The collection to add the classes to.</param>
+	/// <param name="notify">Whether the reader's notifications are sent.</param>
+	private void readClasses(DxfClassCollection classes, bool notify)
+	{
 		this._fileHeader = this._fileHeader ?? this.readFileHeader();
 
 		IDwgStreamReader sreader = this.getSectionStream(DwgSectionDefinition.Classes);
@@ -580,8 +703,11 @@ public class DwgReader : CadReaderBase<DwgReaderConfiguration>
 			this._fileHeader.AcadVersion,
 			sreader,
 			this._fileHeader,
-			this._document.Classes);
-		reader.OnNotification += onNotificationEvent;
+			classes);
+		if (notify)
+		{
+			reader.OnNotification += onNotificationEvent;
+		}
 
 		reader.Read();
 	}
@@ -632,17 +758,7 @@ public class DwgReader : CadReaderBase<DwgReaderConfiguration>
 	{
 		Dictionary<ulong, long> handles = this.readHandles();
 
-		IDwgStreamReader sreader = null;
-		if (this._fileHeader.AcadVersion <= ACadVersion.AC1015)
-		{
-			sreader = DwgStreamReaderBase.GetStreamHandler(this._fileHeader.AcadVersion, this._fileStream.Stream, this._encoding);
-			//Handles are in absolute offset for this versions
-			sreader.Position = 0;
-		}
-		else
-		{
-			sreader = this.getSectionStream(DwgSectionDefinition.AcDbObjects);
-		}
+		IDwgStreamReader sreader = this.getObjectsStream();
 
 		Queue<ulong> objectHandles = new Queue<ulong>(this._builder.HeaderHandles.GetHandles()
 			.Where(o => o.HasValue)
@@ -657,6 +773,29 @@ public class DwgReader : CadReaderBase<DwgReaderConfiguration>
 			this._document.Classes);
 
 		sectionReader.Read();
+	}
+
+	/// <summary>
+	/// The stream the objects of the file are read from, the offsets of the object map are positions in it.
+	/// </summary>
+	/// <remarks>
+	/// Refers to AcDb:AcDbObjects data section.
+	/// </remarks>
+	private IDwgStreamReader getObjectsStream()
+	{
+		IDwgStreamReader sreader = null;
+		if (this._fileHeader.AcadVersion <= ACadVersion.AC1015)
+		{
+			sreader = DwgStreamReaderBase.GetStreamHandler(this._fileHeader.AcadVersion, this._fileStream.Stream, this._encoding);
+			//Handles are in absolute offset for this versions
+			sreader.Position = 0;
+		}
+		else
+		{
+			sreader = this.getSectionStream(DwgSectionDefinition.AcDbObjects);
+		}
+
+		return sreader;
 	}
 
 	/// <summary>

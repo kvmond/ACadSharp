@@ -192,7 +192,12 @@ namespace ACadSharp.IO.DWG
 			}
 		}
 
-		private ObjectType getEntityType(long offset)
+		/// <summary>
+		/// Position the readers at the object stored at <paramref name="offset"/> and read its type. <see cref="Read"/> does this
+		/// before it reads each object, and <see cref="DwgReader.ReadObjectTypes"/> to name the type of objects that were not read.
+		/// </summary>
+		/// <returns>The type of the object, <see cref="ObjectType.INVALID"/> when it has no data.</returns>
+		internal ObjectType getEntityType(long offset)
 		{
 			ObjectType type = ObjectType.INVALID;
 
