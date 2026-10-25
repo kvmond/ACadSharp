@@ -1674,7 +1674,12 @@ internal partial class DwgObjectWriter : DwgSectionIO
 		//  293 Enable Annotation Scale/Is annotative
 		this._writer.WriteBit(multiLeader.EnableAnnotationScale);
 
-		//	R2007pre not supported
+		//	R2007pre: BL number of arrowheads. AirCAD S37e-0: the reader reads this list (each a bit and a handle) before R2007; nothing
+		//	was written, so such a leader could not be read back. The model keeps no list (the reader's template drops it), so none is written.
+		if (this.R2007Pre)
+		{
+			this._writer.WriteBitLong(0);
+		}
 
 		//	BL Number of Block Labels
 		int blockLabelCount = multiLeader.BlockAttributes.Count;
@@ -1827,11 +1832,16 @@ internal partial class DwgObjectWriter : DwgSectionIO
 			//	B	Unknown
 			this._writer.WriteBit(false);
 		}
-		else if (annotContext.HasContentsBlock)
+		else
 		{
-			this._writer.WriteBit(annotContext.HasContentsBlock);
-
 			//B	296	Has contents block
+			// AirCAD S37e-0: the bit follows whenever there is no text, as the reader reads it. It was written only when true, so a
+			// leader without content left one bit out and could not be read back.
+			this._writer.WriteBit(annotContext.HasContentsBlock);
+		}
+
+		if (!annotContext.HasTextContents && annotContext.HasContentsBlock)
+		{
 			//IF Has contents block
 			//	H	341	AcDbBlockTableRecord handle (soft pointer)
 			this._writer.HandleReference(DwgReferenceType.SoftPointer, annotContext.BlockContent);
