@@ -528,6 +528,28 @@ namespace ACadSharp
 		}
 
 		/// <summary>
+		/// AirCAD F-22: a color stored as AutoCAD's AcCmEntityColor value, as DXF group codes 90 to 99 of multileaders, their styles and
+		/// materials hold it, read as the DWG reader reads it: the method in the high byte (0xC0 ByLayer, 0xC1 ByBlock, 0xC2 RGB, 0xC3 ACI,
+		/// 0xC8 none).
+		/// </summary>
+		internal static Color FromEntityColorValue(uint value)
+		{
+			if (value == 0xC8000000)
+			{
+				return Color.None;
+			}
+			if (value == 0xC0000000)
+			{
+				return Color.ByLayer;
+			}
+			if ((value & 0x01000000) != 0)
+			{
+				return new Color((short)((value & 0xFF) | (value >> 24 == 0xC3 ? value & 0xFF00 : 0)));
+			}
+			return new Color((byte)(value >> 16), (byte)(value >> 8), (byte)value);
+		}
+
+		/// <summary>
 		/// Returns the RGB color code which matches the passed indexed color.
 		/// </summary>
 		/// <returns>Approximate RGB color from indexed color.</returns>

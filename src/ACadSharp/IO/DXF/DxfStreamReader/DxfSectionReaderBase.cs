@@ -1468,6 +1468,8 @@ internal abstract class DxfSectionReaderBase
 
 		var map = DxfClassMap.Create<MultiLeaderObjectContextData>();
 		var contextData = template.CadObject as MultiLeaderObjectContextData;
+		// AirCAD F-22: the block content's transformation matrix, 16 values in the order the DWG reader passes its own to Matrix4.
+		List<double> matrix = new List<double>();
 
 		bool end = false;
 		while (this._reader.DxfCode != DxfCode.Start)
@@ -1476,6 +1478,13 @@ internal abstract class DxfSectionReaderBase
 			{
 				case 301 when this._reader.ValueAsString.Equals("}"):
 					end = true;
+					break;
+				case 47:
+					matrix.Add(this._reader.ValueAsDouble);
+					break;
+				// AirCAD F-22: the block content's color, which the property map leaves out.
+				case 93:
+					contextData.BlockContentColor = Color.FromEntityColorValue(unchecked((uint)this._reader.ValueAsInt));
 					break;
 				case 302 when this._reader.ValueAsString.Equals("LEADER{"):
 					contextData.LeaderRoots.Add(this.readMultiLeaderLeader(template));
@@ -1501,6 +1510,11 @@ internal abstract class DxfSectionReaderBase
 			}
 
 			this._reader.ReadNext();
+		}
+
+		if (matrix.Count == 16)
+		{
+			contextData.TransformationMatrix = new Matrix4(matrix.ToArray());
 		}
 	}
 
@@ -1547,6 +1561,11 @@ internal abstract class DxfSectionReaderBase
 	{
 		MultiLeaderObjectContextData.LeaderLine line = template.LeaderLine;
 		var map = DxfClassMap.Create(line.GetType(), nameof(MultiLeaderObjectContextData.LeaderLine));
+		// AirCAD F-22: AutoCAD writes a line's own type, color and weight only when the line overrides them (93); the values it keeps
+		// otherwise are a straight line with ByBlock color and weight (the DWG of MS-MLEADER-SHAPES), not the defaults of these types.
+		line.PathType = MultiLeaderPathType.StraightLineSegments;
+		line.LineColor = Color.ByBlock;
+		line.LineWeight = LineWeightType.ByBlock;
 
 		this._reader.ReadNext();
 
@@ -1571,6 +1590,13 @@ internal abstract class DxfSectionReaderBase
 					break;
 				case 305 when this._reader.ValueAsString.Equals("}"):
 					end = true;
+					break;
+				// AirCAD F-22: a line's own linetype and arrowhead (written when it overrides them), as the DWG reader fills them.
+				case 340:
+					template.LineTypeHandle = this._reader.ValueAsHandle;
+					break;
+				case 341:
+					template.ArrowSymbolHandle = this._reader.ValueAsHandle;
 					break;
 				default:
 					if (!this.tryAssignCurrentValue(line, map))

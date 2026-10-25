@@ -131,7 +131,7 @@ public class MultiLeaderStyle : NonGraphicalObject, IDxfClassDefined
 	/// <see cref="MultiLeader.PropertyOverrideFlags"/> property.
 	/// </para>
 	/// </remarks>
-	[DxfCodeValue(DxfReferenceType.IsAngle, 141)]
+	[DxfCodeValue(141)] // AirCAD F-22: radians in AutoCAD's DXF, not degrees
 	public double BlockContentRotation { get; set; } = 0.0;
 
 	/// <summary>

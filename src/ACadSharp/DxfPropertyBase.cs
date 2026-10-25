@@ -212,6 +212,10 @@ namespace ACadSharp
 						// true color
 						this._property.SetValue(obj, new Color(b[2], b[1], b[0]));
 						break;
+					// AirCAD F-22: an AcCmEntityColor value (multileaders, their styles, materials); it was not read, so the color stayed ByBlock.
+					case >= 90 and <= 99:
+						this._property.SetValue(obj, Color.FromEntityColorValue(unchecked((uint)Convert.ToInt32(value))));
+						break;
 				}
 			}
 			else if (_property.PropertyType.IsEquivalentTo(typeof(PaperMargin)))
@@ -297,13 +301,13 @@ namespace ACadSharp
 					case 62:
 						this._property.SetValue(obj, new Color((short)value));
 						break;
-					case 90:
-						byte[] b = LittleEndianConverter.Instance.GetBytes((int)(value));
-						// true color
-						this._property.SetValue(obj, new Color(b[2], b[1], b[0]));
+					// AirCAD F-22: an AcCmEntityColor value (multileaders, their styles, materials). 90 was read as its low 24 bits (ByLayer
+					// became black) and 91 to 99 not at all (ByBlock); an RGB value (method 0xC2 or none) reads as before.
+					case >= 90 and <= 99:
+						this._property.SetValue(obj, Color.FromEntityColorValue(unchecked((uint)Convert.ToInt32(value))));
 						break;
 					case 420:
-						b = LittleEndianConverter.Instance.GetBytes((int)value);
+						byte[] b = LittleEndianConverter.Instance.GetBytes((int)value);
 						// true color
 						this._property.SetValue(obj, new Color(b[2], b[1], b[0]));
 						break;

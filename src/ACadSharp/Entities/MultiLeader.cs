@@ -128,7 +128,7 @@ public partial class MultiLeader : Entity, IDxfClassDefined
 	/// should be equal, the value <see cref="MultiLeaderObjectContextData.BlockContentRotation"/> is
 	/// assumed to be used.
 	/// </remarks>
-	[DxfCodeValue(DxfReferenceType.IsAngle, 43)]
+	[DxfCodeValue(43)] // AirCAD F-22: radians in AutoCAD's DXF, not degrees
 	public double BlockContentRotation { get; set; }
 
 	/// <summary>

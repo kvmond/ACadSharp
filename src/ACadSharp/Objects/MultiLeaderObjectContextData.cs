@@ -158,7 +158,7 @@ public partial class MultiLeaderObjectContextData : AnnotScaleObjectContextData,
 	/// <value>
 	/// The rotation angle in radians.
 	/// </value>
-	[DxfCodeValue(DxfReferenceType.IsAngle, 46)]
+	[DxfCodeValue(46)] // AirCAD F-22: radians in AutoCAD's DXF, not degrees
 	public double BlockContentRotation { get; set; }
 
 	/// <summary>
@@ -462,7 +462,7 @@ public partial class MultiLeaderObjectContextData : AnnotScaleObjectContextData,
 	/// <value>
 	/// The rotation angle in radians.
 	/// </value>
-	[DxfCodeValue(DxfReferenceType.IsAngle, 42)]
+	[DxfCodeValue(42)] // AirCAD F-22: radians in AutoCAD's DXF, not degrees
 	public double TextRotation { get; set; }
 
 	/// <summary>
