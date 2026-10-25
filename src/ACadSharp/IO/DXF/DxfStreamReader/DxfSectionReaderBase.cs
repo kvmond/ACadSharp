@@ -1425,6 +1425,7 @@ internal abstract class DxfSectionReaderBase
 				return true;
 			case 300:
 				this.readMultiLeaderObjectContextData(tmp.CadMLeaderAnnotContextTemplate);
+				tmp.ContextRead = true;
 				return true;
 			case 340:
 				tmp.LeaderStyleHandle = this._reader.ValueAsHandle;
@@ -1432,8 +1433,29 @@ internal abstract class DxfSectionReaderBase
 			case 341:
 				tmp.LeaderLineTypeHandle = this._reader.ValueAsHandle;
 				return true;
+			// AirCAD F-22: the arrowhead block, the block content and its attributes, read into the template the DWG reader fills.
+			case 342:
+				tmp.ArrowheadHandle = this._reader.ValueAsHandle;
+				return true;
 			case 343:
 				tmp.MTextStyleHandle = this._reader.ValueAsHandle;
+				return true;
+			case 344:
+				tmp.BlockContentHandle = this._reader.ValueAsHandle;
+				return true;
+			case 330 when tmp.ContextRead:
+				tmp.CurrentAttribute = new MultiLeader.BlockAttribute();
+				tmp.CadObject.BlockAttributes.Add(tmp.CurrentAttribute);
+				tmp.BlockAttributeHandles.Add(tmp.CurrentAttribute, this._reader.ValueAsHandle);
+				return true;
+			case 177 when tmp.CurrentAttribute is not null:
+				tmp.CurrentAttribute.Index = this._reader.ValueAsShort;
+				return true;
+			case 44 when tmp.CurrentAttribute is not null:
+				tmp.CurrentAttribute.Width = this._reader.ValueAsDouble;
+				return true;
+			case 302 when tmp.CurrentAttribute is not null:
+				tmp.CurrentAttribute.Text = this._reader.ValueAsString;
 				return true;
 			default:
 				return this.tryAssignCurrentValue(template.CadObject, map.SubClasses[tmp.CadObject.SubclassMarker]);
@@ -1460,6 +1482,10 @@ internal abstract class DxfSectionReaderBase
 					break;
 				case 340:
 					template.TextStyleHandle = this._reader.ValueAsHandle;
+					break;
+				// AirCAD F-22: the block record of the block content.
+				case 341:
+					template.BlockRecordHandle = this._reader.ValueAsHandle;
 					break;
 				default:
 					if (!this.tryAssignCurrentValue(contextData, map))

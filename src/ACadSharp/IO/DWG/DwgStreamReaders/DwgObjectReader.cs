@@ -3904,11 +3904,47 @@ namespace ACadSharp.IO.DWG
 			return template;
 		}
 
+		/// <summary>
+		/// AirCAD F-22: whether a context whose root count is 0 really has no roots: the common values that follow it (overall scale, content
+		/// base point, text height, arrowhead size, landing gap) read as finite, with a positive scale and no negative size. The reader is put
+		/// back where it was either way.
+		/// </summary>
+		private bool noLeaderRoots()
+		{
+			long position = this._objectReader.PositionInBits();
+			try
+			{
+				double scale = this._objectReader.ReadBitDouble();
+				XYZ basePoint = this._objectReader.Read3BitDouble();
+				double textHeight = this._objectReader.ReadBitDouble();
+				double arrowheadSize = this._objectReader.ReadBitDouble();
+				double landingGap = this._objectReader.ReadBitDouble();
+				const double limit = 1e12;
+				static bool finite(double value) => !double.IsNaN(value) && !double.IsInfinity(value) && Math.Abs(value) < limit;
+				return finite(scale) && scale > 0
+					&& finite(basePoint.X) && finite(basePoint.Y) && finite(basePoint.Z)
+					&& finite(textHeight) && textHeight >= 0
+					&& finite(arrowheadSize) && arrowheadSize >= 0
+					&& finite(landingGap) && landingGap >= 0;
+			}
+			catch (Exception)
+			{
+				return false;
+			}
+			finally
+			{
+				this._objectReader.SetPositionInBits(position);
+			}
+		}
+
 		private MultiLeaderObjectContextData readMultiLeaderAnnotContext(MultiLeaderObjectContextData annotContext, CadMLeaderAnnotContextTemplate template)
 		{
 			//	BL	-	Number of leader roots
 			int leaderRootCount = this._objectReader.ReadBitLong();
-			if (leaderRootCount == 0)
+			// AirCAD F-22: a multileader whose leader type is "none" (MLEADERSTYLE 173 = 0) has no roots, and AutoCAD writes 0. The upstream
+			// workaround below reads 7 more bits and one or two roots, which fails for it. Read as no roots first, and keep that only when the
+			// common values that follow make sense; otherwise go back and use the workaround the upstream samples need.
+			if (leaderRootCount == 0 && !this.noLeaderRoots())
 			{
 				bool b0 = this._objectReader.ReadBit();
 				bool b1 = this._objectReader.ReadBit();

@@ -23,6 +23,12 @@ namespace ACadSharp.IO.Templates
 
 		public ulong MTextStyleHandle { get; set; }
 
+		/// <summary>AirCAD F-22: the DXF reader has read the context data; a 330 after it starts a block attribute, not an owner or reactor.</summary>
+		internal bool ContextRead { get; set; }
+
+		/// <summary>AirCAD F-22: the block attribute the DXF reader is filling (330, then 177, 44 and 302).</summary>
+		internal MultiLeader.BlockAttribute CurrentAttribute { get; set; }
+
 		public CadMLeaderTemplate() : this(new MultiLeader())
 		{
 		}
