@@ -1674,7 +1674,7 @@ internal partial class DwgObjectWriter : DwgSectionIO
 		//  293 Enable Annotation Scale/Is annotative
 		this._writer.WriteBit(multiLeader.EnableAnnotationScale);
 
-		//	R2007pre: BL number of arrowheads. AirCAD S37e-0: the reader reads this list (each a bit and a handle) before R2007; nothing
+		//	R2007pre: BL number of arrowheads. AirCAD S37e-0: the reader reads this list (each a bit and a handle) up to R2007; nothing
 		//	was written, so such a leader could not be read back. The model keeps no list (the reader's template drops it), so none is written.
 		if (this.R2007Pre)
 		{

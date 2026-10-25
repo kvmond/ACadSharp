@@ -3844,6 +3844,12 @@ namespace ACadSharp.IO.DWG
 					//  345 Arrowhead ID
 					template.ArrowheadHandles.Add(this.handleReference(), isDefault);
 				}
+
+				// AirCAD S37e-0: the model keeps no such list (the template drops it), so writing the drawing back loses these overrides.
+				if (arrowHeadCount > 0)
+				{
+					this._builder.Notify($"MULTILEADER {template.CadObject.Handle:X}: {arrowHeadCount} arrowhead entries of a file before R2010 are read but not kept.", NotificationType.Warning);
+				}
 			}
 
 			//	BL Number of Block Labels
