@@ -3226,6 +3226,14 @@ internal class DxfObjectsSectionReader : DxfSectionReaderBase
 	{
 		this._reader.ReadNext();
 
+		// AirCAD F-29: the 280 right after the subclass marker is the duplicate record cloning flag, as AutoCAD's DXFOUT and the writer put
+		// it, not data; it used to become a data entry, so a drawing opened from DXF saved its xrecords with an extra leading 280.
+		if (this._reader.Code == 280)
+		{
+			template.CadObject.CloningFlags = (DictionaryCloningFlags)this._reader.ValueAsShort;
+			this._reader.ReadNext();
+		}
+
 		while (this._reader.DxfCode != DxfCode.Start)
 		{
 			switch (this._reader.GroupCodeValue)

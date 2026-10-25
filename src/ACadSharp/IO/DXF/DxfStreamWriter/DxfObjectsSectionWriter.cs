@@ -704,8 +704,10 @@ internal class DxfObjectsSectionWriter : DxfSectionWriterBase
 				case GroupCodeValueType.Handle:
 				case GroupCodeValueType.ObjectId:
 				case GroupCodeValueType.ExtendedDataHandle:
-					var obj = e.Value as IHandledCadObject;
-					this._writer.Write(e.Code, obj.Handle);
+					// AirCAD F-29: an entry no object answers (kept in its place by the reader) keeps its handle, or is a null id for an object id,
+					// as the DWG writer writes them.
+					this._writer.Write(e.Code, e.Value is IHandledCadObject obj ? obj.Handle
+						: e.GroupCode != GroupCodeValueType.ObjectId && e.Value is ulong raw ? raw : 0UL);
 					break;
 				default:
 					this._writer.Write(e.Code, e.Value);

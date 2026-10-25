@@ -78,4 +78,12 @@ public partial class XRecord : NonGraphicalObject
 	{
 		this._entries.Add(new Entry(code, value, this));
 	}
+
+	/// <summary>An entry added in reading order whose value (a referenced object) the reader sets when the document is built (AirCAD F-29).</summary>
+	internal Entry AddPendingEntry(int code)
+	{
+		var entry = new Entry(code, null, this);
+		this._entries.Add(entry);
+		return entry;
+	}
 }
