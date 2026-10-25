@@ -2469,8 +2469,9 @@ internal partial class DwgObjectWriter : DwgSectionIO
 					var obj = entry.GetReference();
 					if (obj == null)
 					{
-						// AirCAD F-29: a handle no object answers keeps its value (the reader keeps it in its place).
-						this.writeStringInStream(ms, entry.Value is ulong raw && raw != 0 ? raw.ToString("X", CultureInfo.InvariantCulture) : string.Empty);
+						// AirCAD F-29: a handle no object answers keeps its value, 0 included (the reader keeps it in its place; an empty string
+						// would not parse back and the entries after it would move).
+						this.writeStringInStream(ms, entry.Value is ulong raw ? raw.ToString("X", CultureInfo.InvariantCulture) : string.Empty);
 					}
 					else
 					{

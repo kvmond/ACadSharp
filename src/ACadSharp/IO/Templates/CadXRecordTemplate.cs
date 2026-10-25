@@ -32,8 +32,9 @@ namespace ACadSharp.IO.Templates
 				}
 				else
 				{
-					// AirCAD F-29: an id no object answers keeps its place as the handle read (a null id is common: AutoCAD writes 0 for "none"),
-					// so the entries after it do not move; it used to be removed. The writers write it as a null id.
+					// AirCAD F-29: an id no object answers keeps its place as the handle read (a null id is common: AutoCAD writes 0 for "none",
+					// as in its layer states), so the entries after it do not move; it used to be removed. The writers write an object id as a
+					// null id and a handle as its value; AirCAD refuses to save a non-zero object id that names nothing.
 					entry.Item1.Value = entry.Item2;
 					if (entry.Item2 != 0)
 					{

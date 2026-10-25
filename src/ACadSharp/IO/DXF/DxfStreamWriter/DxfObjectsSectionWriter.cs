@@ -683,7 +683,11 @@ internal class DxfObjectsSectionWriter : DxfSectionWriterBase
 	{
 		this._writer.Write(DxfCode.Subclass, DxfSubclassMarker.XRecord);
 
-		this._writer.Write(280, record.CloningFlags);
+		//Cloning flag 280: R2000+, as the DWG writer writes it (AirCad F-29: the reader takes the 280 there as the flag)
+		if (this.Version >= ACadVersion.AC1015)
+		{
+			this._writer.Write(280, record.CloningFlags);
+		}
 
 		foreach (var e in record.Entries)
 		{
@@ -704,10 +708,10 @@ internal class DxfObjectsSectionWriter : DxfSectionWriterBase
 				case GroupCodeValueType.Handle:
 				case GroupCodeValueType.ObjectId:
 				case GroupCodeValueType.ExtendedDataHandle:
-					// AirCAD F-29: an entry no object answers (kept in its place by the reader) keeps its handle, or is a null id for an object id,
-					// as the DWG writer writes them.
+					// AirCAD F-29: an entry no object answers (kept in its place by the reader) is a null id for an object id (ObjectId and
+					// ExtendedDataHandle, 8-byte ids in a DWG) and keeps its value for a handle, as the DWG writer writes them.
 					this._writer.Write(e.Code, e.Value is IHandledCadObject obj ? obj.Handle
-						: e.GroupCode != GroupCodeValueType.ObjectId && e.Value is ulong raw ? raw : 0UL);
+						: e.GroupCode == GroupCodeValueType.Handle && e.Value is ulong raw ? raw : 0UL);
 					break;
 				default:
 					this._writer.Write(e.Code, e.Value);
