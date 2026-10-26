@@ -1710,10 +1710,10 @@ internal partial class DwgObjectWriter : DwgSectionIO
 		{
 			//  271 Text attachment direction for MText contents
 			this._writer.WriteBitShort((short)multiLeader.TextAttachmentDirection);
-			//  272 Bottom text attachment direction (sequence my be interchanged)
-			this._writer.WriteBitShort((short)multiLeader.TextBottomAttachment);
-			//  273 Top text attachment direction
+			//  273 Top text attachment direction; the top one comes first (see the reader, AirCAD F-30)
 			this._writer.WriteBitShort((short)multiLeader.TextTopAttachment);
+			//  272 Bottom text attachment direction
+			this._writer.WriteBitShort((short)multiLeader.TextBottomAttachment);
 		}
 
 		if (this.R2013Plus)

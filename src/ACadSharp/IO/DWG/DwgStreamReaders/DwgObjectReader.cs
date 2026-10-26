@@ -3884,10 +3884,11 @@ namespace ACadSharp.IO.DWG
 			{
 				//  271 Text attachment direction for MText contents
 				mLeader.TextAttachmentDirection = (TextAttachmentDirectionType)this._objectReader.ReadBitShort();
-				//  272 Bottom text attachment direction (sequence my be interchanged)
-				mLeader.TextBottomAttachment = (TextAttachmentType)this._objectReader.ReadBitShort();
 				//  273 Top text attachment direction
+				//  The top one comes first, as in the style (AirCAD F-30: AutoCAD 2025's leader with top 9 and bottom 10 was read the other way round).
 				mLeader.TextTopAttachment = (TextAttachmentType)this._objectReader.ReadBitShort();
+				//  272 Bottom text attachment direction
+				mLeader.TextBottomAttachment = (TextAttachmentType)this._objectReader.ReadBitShort();
 			}
 
 			if (this.R2013Plus)
@@ -4171,13 +4172,14 @@ namespace ACadSharp.IO.DWG
 			mLeaderStyle.BlockContentConnection = (BlockContentConnectionType)this._objectReader.ReadBitShort();
 			//	BD	142	Scale factor
 			mLeaderStyle.ScaleFactor = this._objectReader.ReadBitDouble();
+			//	B	296	Is annotative?
+			//	DWG holds it before 295, the reverse of DXF: AutoCAD 2025 dumps its "Annotative" style as 296 = 1 and that is the first bit
+			//	(AirCAD F-30; the two were read the other way round, and a DXF converted to DWG lost the flag).
+			mLeaderStyle.IsAnnotative = this._objectReader.ReadBit();
 			//	B	295	Property changed, meaning not totally clear
 			//	might be set to true if something changed after loading,
 			//	or might be used to trigger updates in dependent MLeaders.
-			//	sequence seems to be different in DXF
 			mLeaderStyle.OverwritePropertyValue = this._objectReader.ReadBit();
-			//	B	296	Is annotative?
-			mLeaderStyle.IsAnnotative = this._objectReader.ReadBit();
 			//	BD	143	Break size
 			mLeaderStyle.BreakGapSize = this._objectReader.ReadBitDouble();
 
@@ -4186,9 +4188,10 @@ namespace ACadSharp.IO.DWG
 				//	BS	271	Attachment direction (see paragraph on LEADER for more details).
 				mLeaderStyle.TextAttachmentDirection = (TextAttachmentDirectionType)this._objectReader.ReadBitShort();
 				//	BS	273	Top attachment (see paragraph on LEADER for more details).
-				mLeaderStyle.TextBottomAttachment = (TextAttachmentType)this._objectReader.ReadBitShort();
-				//	BS	272	Bottom attachment (see paragraph on LEADER for more details).
+				//	The top one comes first: AutoCAD 2025's style with top 9 and bottom 10 was read the other way round (AirCAD F-30).
 				mLeaderStyle.TextTopAttachment = (TextAttachmentType)this._objectReader.ReadBitShort();
+				//	BS	272	Bottom attachment (see paragraph on LEADER for more details).
+				mLeaderStyle.TextBottomAttachment = (TextAttachmentType)this._objectReader.ReadBitShort();
 			}
 
 			if (this.R2013Plus)

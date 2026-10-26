@@ -1742,13 +1742,13 @@ internal partial class DwgObjectWriter : DwgSectionIO
 		this._writer.WriteBitShort((short)mLeaderStyle.BlockContentConnection);
 		//	BD	142	Scale factor
 		this._writer.WriteBitDouble(mLeaderStyle.ScaleFactor);
+		//	B	296	Is annotative?
+		//	DWG holds it before 295, the reverse of DXF (see the reader, AirCAD F-30).
+		this._writer.WriteBit(mLeaderStyle.IsAnnotative);
 		//	B	295	Property changed, meaning not totally clear
 		//	might be set to true if something changed after loading,
 		//	or might be used to trigger updates in dependent MLeaders.
-		//	sequence seems to be different in DXF
 		this._writer.WriteBit(mLeaderStyle.OverwritePropertyValue);
-		//	B	296	Is annotative?
-		this._writer.WriteBit(mLeaderStyle.IsAnnotative);
 		//	BD	143	Break size
 		this._writer.WriteBitDouble(mLeaderStyle.BreakGapSize);
 
@@ -1756,10 +1756,10 @@ internal partial class DwgObjectWriter : DwgSectionIO
 		{
 			//	BS	271	Attachment direction (see paragraph on LEADER for more details).
 			this._writer.WriteBitShort((short)mLeaderStyle.TextAttachmentDirection);
-			//	BS	273	Top attachment (see paragraph on LEADER for more details).
-			this._writer.WriteBitShort((short)mLeaderStyle.TextBottomAttachment);
-			//	BS	272	Bottom attachment (see paragraph on LEADER for more details).
+			//	BS	273	Top attachment (see paragraph on LEADER for more details); the top one comes first (see the reader, AirCAD F-30).
 			this._writer.WriteBitShort((short)mLeaderStyle.TextTopAttachment);
+			//	BS	272	Bottom attachment (see paragraph on LEADER for more details).
+			this._writer.WriteBitShort((short)mLeaderStyle.TextBottomAttachment);
 		}
 
 		if (this.R2013Plus)
