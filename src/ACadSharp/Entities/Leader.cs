@@ -69,8 +69,16 @@ public class Leader : Entity, IOrientable
 				return result;
 			}
 
-			double angle = (this.Vertices[this.Vertices.Count - 2] - this.Vertices[this.Vertices.Count - 1]).AngleBetweenVectors(this.HorizontalDirection);
-			return angle.IsZero();
+			//The last segment lies along the horizontal direction, either way: AutoCAD gives 75 = 1 to a hookline that points against it
+			//(74 = 0) as well (AirCAD F-32). A zero-length last segment has no hookline.
+			XYZ last = this.Vertices[this.Vertices.Count - 2] - this.Vertices[this.Vertices.Count - 1];
+			double lengths = last.GetLength() * this.HorizontalDirection.GetLength();
+			if (lengths.IsZero())
+			{
+				return result;
+			}
+
+			return (XYZ.Cross(last, this.HorizontalDirection).GetLength() / lengths).IsZero();
 		}
 	}
 

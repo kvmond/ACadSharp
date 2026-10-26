@@ -181,7 +181,9 @@ internal abstract class DxfSectionReaderBase
 			case DxfFileToken.EntityEllipse:
 				return this.readEntityCodes<Ellipse>(new CadEntityTemplate<Ellipse>(), this.readEntitySubclassMap);
 			case DxfFileToken.EntityLeader:
-				return this.readEntityCodes<Leader>(new CadLeaderTemplate(), this.readLeader);
+				//AutoCAD leaves the arrowhead flag (71) and the hookline direction (74) out when they are 1 and writes them when 0,
+				//so a leader starts from 1 (AirCAD F-32: every leader of AutoCAD's DXFOUT was read without its arrowhead)
+				return this.readEntityCodes<Leader>(new CadLeaderTemplate(new Leader { ArrowHeadEnabled = true, HookLineDirection = HookLineDirection.Same }), this.readLeader);
 			case DxfFileToken.EntityLine:
 				return this.readEntityCodes<Line>(new CadEntityTemplate<Line>(), this.readEntitySubclassMap);
 			case DxfFileToken.EntityLwPolyline:
