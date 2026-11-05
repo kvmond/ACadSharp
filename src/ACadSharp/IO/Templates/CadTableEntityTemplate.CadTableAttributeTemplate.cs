@@ -17,7 +17,8 @@ internal partial class CadTableEntityTemplate
 
 		public void Build(CadDocumentBuilder builder)
 		{
-			throw new System.NotImplementedException();
+			// TableEntity.TableAttribute keeps the value only, so the attribute definition has nowhere to go.
+			// This used to throw, which stopped a drawing with a block cell with attributes from opening at all (R2010 and later).
 		}
 	}
 }
