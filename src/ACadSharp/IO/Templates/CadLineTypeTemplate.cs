@@ -26,8 +26,6 @@ namespace ACadSharp.IO.Templates
 			}
 		}
 
-		public ulong? LtypeControlHandle { get; set; }
-
 		public double? TotalLen { get; set; }
 
 		public List<SegmentTemplate> SegmentTemplates { get; set; } = new List<SegmentTemplate>();

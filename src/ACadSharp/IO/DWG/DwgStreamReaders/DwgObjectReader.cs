@@ -937,7 +937,7 @@ namespace ACadSharp.IO.DWG
 			//Unknown RC 71 Undoc'd 71-group; doesn't even appear in DXF or an entget if it's 0.
 			this._objectReader.ReadByte();
 
-			//External reference block handle(hard pointer)	??
+			//External reference block handle(hard pointer): not kept for an APPID (its template is not a table entry template); AutoCAD writes none.
 			this.handleReference();
 
 			return template;
@@ -1139,8 +1139,8 @@ namespace ACadSharp.IO.DWG
 				record.CanScale = this._objectReader.ReadByte() > 0;
 			}
 
-			//NULL(hard pointer)
-			this.handleReference();
+			//External reference block handle (hard pointer), NULL in the ODA specification
+			template.XrefBlockHandle = this.handleReference();
 			//BLOCK entity. (hard owner)
 			//Block begin object
 			template.BeginBlockHandle = this.handleReference();
@@ -1716,7 +1716,7 @@ namespace ACadSharp.IO.DWG
 			this._objectReader.ReadBit();
 
 			//External reference block handle(hard pointer)
-			template.BlockHandle = this.handleReference();
+			template.XrefBlockHandle = this.handleReference();
 
 			//340 shapefile(DIMTXSTY)(hard pointer)
 			template.TextStyleHandle = this.handleReference();
@@ -2341,12 +2341,11 @@ namespace ACadSharp.IO.DWG
 			var color = this._mergedReaders.ReadCmColor();
 			layer.Color = color.IsByBlock || color.IsByLayer ? Color.Default : color;
 
-			//TODO: This is not the Layer control handle
-			template.LayerControlHandle = this.handleReference();
 			//Handle refs H Layer control (soft pointer)
 			//[Reactors(soft pointer)]
 			//xdicobjhandle(hard owner)
-			//External reference block handle(hard pointer)
+			//External reference block handle(hard pointer): the first three are read with the common data
+			template.XrefBlockHandle = this.handleReference();
 
 			//R2000+:
 			if (this.R2000Plus)
@@ -2795,7 +2794,7 @@ namespace ACadSharp.IO.DWG
 			//[Reactors (soft pointer)]
 			//xdicobjhandle(hard owner)
 			//External reference block handle(hard pointer)
-			template.LtypeControlHandle = this.handleReference();
+			template.XrefBlockHandle = this.handleReference();
 
 			//340 shapefile for dash/shape (1 each) (hard pointer)
 			for (int i = 0; i < ndashes; i++)
@@ -5386,7 +5385,8 @@ namespace ACadSharp.IO.DWG
 			//Bigfont name TV 4
 			style.BigFontFilename = this._textReader.ReadVariableText();
 
-			ulong styleControl = this.handleReference();
+			//External reference block handle (hard pointer)
+			template.XrefBlockHandle = this.handleReference();
 
 			return template;
 		}
@@ -5459,8 +5459,9 @@ namespace ACadSharp.IO.DWG
 			}
 
 			//Common:
-			//Handle refs H ucs control object (soft pointer)
-			long control = (long)this.handleReference();
+			//External reference block handle (hard pointer): not kept for a UCS (its template is not a table entry template); AutoCAD writes none.
+			//The ucs control object, reactors and xdicobjhandle are read with the common data.
+			this.handleReference();
 
 			//R2000 +:
 			if (this.R2000Plus)
@@ -6694,8 +6695,8 @@ namespace ACadSharp.IO.DWG
 			}
 
 			//Common:
-			//Handle refs H view control object (soft pointer)
-			this.handleReference();
+			//External reference block handle (hard pointer); the view control object, reactors and xdicobjhandle are read with the common data
+			template.XrefBlockHandle = this.handleReference();
 
 			//R2007+:
 			if (this.R2007Plus)
@@ -7102,7 +7103,7 @@ namespace ACadSharp.IO.DWG
 			//[Reactors(soft pointer)]
 			//xdicobjhandle(hard owner)
 			//External reference block handle(hard pointer)
-			template.VportControlHandle = this.handleReference();
+			template.XrefBlockHandle = this.handleReference();
 
 			//R2007+:
 			if (this.R2007Plus)

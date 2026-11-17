@@ -4,8 +4,6 @@ namespace ACadSharp.IO.Templates
 {
 	internal class CadVPortTemplate : CadTableEntryTemplate<VPort>
 	{
-		public ulong VportControlHandle { get; set; }
-
 		public ulong? BackgroundHandle { get; set; }
 
 		public ulong? StyleHandle { get; set; }

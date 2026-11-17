@@ -21,6 +21,16 @@ public abstract class TableEntry : CadObject, INamedCadObject
 	public StandardFlags Flags { get; set; }
 
 	/// <summary>
+	/// The block record of the external reference this entry came with (an <c>xref|name</c> entry), null for an entry of the drawing itself.
+	/// </summary>
+	/// <remarks>
+	/// DWG keeps it as the record's external reference block handle; DXF has no group for it. AutoCAD finds an xref's dependent layers and linetypes by
+	/// it when the xref file is not found: without it they are dropped on opening. The DWG writer writes it only while the block record belongs to the
+	/// document being written (an entry copied from another document gets none).
+	/// </remarks>
+	public BlockRecord XrefBlock { get; set; }
+
+	/// <summary>
 	/// Specifies the name of the object
 	/// </summary>
 	[DxfCodeValue(2)]

@@ -5,8 +5,6 @@ namespace ACadSharp.IO.Templates
 {
 	internal class CadLayerTemplate : CadTableEntryTemplate<Layer>
 	{
-		public ulong LayerControlHandle { get; set; }
-
 		public ulong PlotStyleHandle { get; set; }
 
 		public ulong MaterialHandle { get; set; }

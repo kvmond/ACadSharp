@@ -203,8 +203,8 @@ internal partial class DwgObjectWriter : DwgSectionIO
 		//Unknown RC 71 Undoc'd 71-group; doesn't even appear in DXF or an entget if it's 0.
 		this._writer.WriteByte(0);
 
-		//External reference block handle(hard pointer)	??
-		this._writer.HandleReference(DwgReferenceType.HardPointer, 0);
+		//External reference block handle(hard pointer)
+		this.writeXrefBlock(app);
 
 		this.registerObject(app);
 	}
@@ -372,8 +372,8 @@ internal partial class DwgObjectWriter : DwgSectionIO
 			this._writer.WriteByte((byte)(record.CanScale ? 1u : 0u));
 		}
 
-		//NULL(hard pointer)
-		this._writer.HandleReference(DwgReferenceType.HardPointer, 0);
+		//External reference block handle (hard pointer), NULL in the ODA specification
+		this.writeXrefBlock(record);
 		//BLOCK entity. (hard owner)
 		//Block begin object
 		this._writer.HandleReference(DwgReferenceType.HardOwnership, record.BlockEntity);
@@ -822,7 +822,7 @@ internal partial class DwgObjectWriter : DwgSectionIO
 		//xdicobjhandle(hard owner)
 
 		//External reference block handle(hard pointer)
-		this._writer.HandleReference(DwgReferenceType.HardPointer, 0);
+		this.writeXrefBlock(dimStyle);
 
 		//340 shapefile(DIMTXSTY)(hard pointer)
 		this._writer.HandleReference(DwgReferenceType.HardPointer, dimStyle.Style);
@@ -1230,7 +1230,7 @@ internal partial class DwgObjectWriter : DwgSectionIO
 		this._writer.WriteCmColor(layer.Color);
 
 		//External reference block handle(hard pointer)
-		this._writer.HandleReference(DwgReferenceType.HardPointer, null);
+		this.writeXrefBlock(layer);
 
 		//R2000+:
 		if (this.R2000Plus)
@@ -1285,7 +1285,8 @@ internal partial class DwgObjectWriter : DwgSectionIO
 		// Always 256 bytes before R2007; 512 UTF-16 bytes only when modern records contain text.
 		if (textArea != null)
 			foreach (byte value in textArea) this._writer.WriteByte(value);
-		this._writer.HandleReference(DwgReferenceType.HardPointer, 0);
+		//External reference block handle(hard pointer)
+		this.writeXrefBlock(ltype);
 		foreach (var segment in segments)
 			this._writer.HandleReference(DwgReferenceType.HardPointer, segment.Style);
 		this.registerObject(ltype);
@@ -1471,7 +1472,8 @@ internal partial class DwgObjectWriter : DwgSectionIO
 		//Bigfont name TV 4
 		this._writer.WriteVariableText(style.BigFontFilename);
 
-		this._writer.HandleReference(DwgReferenceType.HardPointer, this._document.TextStyles);
+		//External reference block handle (hard pointer): the style control object was written here before
+		this.writeXrefBlock(style);
 
 		this.registerObject(style);
 	}
@@ -1505,8 +1507,8 @@ internal partial class DwgObjectWriter : DwgSectionIO
 		}
 
 		//Common:
-		//Handle refs H ucs control object (soft pointer)
-		this._writer.HandleReference(DwgReferenceType.SoftPointer, this._document.UCSs);
+		//External reference block handle (hard pointer): the ucs control object was written here before
+		this.writeXrefBlock(ucs);
 
 		//R2000 +:
 		if (this.R2000Plus)
@@ -1605,8 +1607,8 @@ internal partial class DwgObjectWriter : DwgSectionIO
 		}
 
 		//Common:
-		//Handle refs H view control object (soft pointer)
-		this._writer.HandleReference(DwgReferenceType.SoftPointer, this._document.Views);
+		//External reference block handle (hard pointer): the view control object was written here before
+		this.writeXrefBlock(view);
 
 		//R2007+:
 		if (this.R2007Plus)
@@ -1778,7 +1780,7 @@ internal partial class DwgObjectWriter : DwgSectionIO
 
 		//Common:
 		//External reference block handle(hard pointer)
-		this._writer.HandleReference(DwgReferenceType.HardPointer, 0);
+		this.writeXrefBlock(vport);
 
 		//R2007+:
 		if (this.R2007Plus)
@@ -1811,6 +1813,16 @@ internal partial class DwgObjectWriter : DwgSectionIO
 		}
 
 		this.registerObject(vport);
+	}
+
+	/// <summary>
+	/// A symbol table record's external reference block handle: its <see cref="TableEntry.XrefBlock"/> while that block record belongs to the document
+	/// being written, otherwise none (an entry copied from another document, or one whose xref was removed, points nowhere).
+	/// </summary>
+	private void writeXrefBlock(TableEntry entry)
+	{
+		BlockRecord xrefBlock = entry.XrefBlock;
+		this._writer.HandleReference(DwgReferenceType.HardPointer, xrefBlock != null && xrefBlock.Document == this._document ? xrefBlock : null);
 	}
 
 	private void writeXrefDependantBit(TableEntry entry)
