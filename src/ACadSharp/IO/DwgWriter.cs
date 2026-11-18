@@ -331,8 +331,8 @@ public class DwgWriter : CadWriterBase<DwgWriterConfiguration>
 		{
 			writer.Write(this.Preview, this._stream.Position);
 
-			//Page has to fit the image byte size, in intervals of 0x400
-			int pageSize = (int)((stream.Length % 0x400) * 0x400 + 0x400);
+			//Page has to fit the image byte size, in intervals of 0x400 (a division: the remainder gave a page of up to 1 MB of zeros)
+			int pageSize = (int)((stream.Length / 0x400) * 0x400 + 0x400);
 			this._fileHeaderWriter.AddSection(DwgSectionDefinition.Preview, stream, false, pageSize);
 		}
 		else
