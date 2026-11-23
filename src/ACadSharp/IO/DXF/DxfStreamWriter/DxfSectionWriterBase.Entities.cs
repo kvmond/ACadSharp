@@ -183,7 +183,7 @@ internal abstract partial class DxfSectionWriterBase
 		this._writer.Write(2, att.Tag);
 
 		this._writer.Write(70, (short)att.Flags);
-		this._writer.Write(73, (short)0);
+		this._writer.Write(73, att.FieldLength);
 
 		if (att.VerticalAlignment != 0)
 		{

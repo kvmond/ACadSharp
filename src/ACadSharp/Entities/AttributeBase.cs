@@ -22,6 +22,12 @@ public abstract class AttributeBase : TextEntity
 	public AttributeFlags Flags { get; set; }
 
 	/// <summary>
+	/// Field length. AutoCAD does not use it; it is kept as stored.
+	/// </summary>
+	[DxfCodeValue(73)]
+	public short FieldLength { get; set; }
+
+	/// <summary>
 	/// Gets or sets a value indicating whether the object is currently locked.
 	/// </summary>
 	public bool IsLocked { get; set; }
@@ -142,6 +148,7 @@ public abstract class AttributeBase : TextEntity
 		this.Version = src.Version;
 		this.Tag = src.Tag;
 		this.Flags = src.Flags;
+		this.FieldLength = src.FieldLength;
 		this.AttributeType = src.AttributeType;
 		this.IsLocked = src.IsLocked;
 		this.MText = src.MText?.CloneTyped();

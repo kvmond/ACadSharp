@@ -161,8 +161,8 @@ internal partial class DwgObjectWriter : DwgSectionIO
 		//Common:
 		//Tag TV 2
 		this._writer.WriteVariableText(att.Tag);
-		//Field length BS 73 unused
-		this._writer.WriteBitShort(0);
+		//Field length BS 73 (not used by AutoCAD, kept as stored)
+		this._writer.WriteBitShort(att.FieldLength);
 		//Flags RC 70 NOT bit-pair - coded.
 		this._writer.WriteByte((byte)att.Flags);
 

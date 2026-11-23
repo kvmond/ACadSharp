@@ -5894,8 +5894,8 @@ namespace ACadSharp.IO.DWG
 			//Common:
 			//Tag TV 2
 			att.Tag = this._textReader.ReadVariableText();
-			//Field length BS 73 unused
-			short length = this._objectReader.ReadBitShort();
+			//Field length BS 73 (not used by AutoCAD, kept as stored)
+			att.FieldLength = this._objectReader.ReadBitShort();
 			//Flags RC 70 NOT bit-pair - coded.
 			att.Flags = (AttributeFlags)this._objectReader.ReadByte();
 			//R2007 +:

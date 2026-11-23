@@ -248,6 +248,35 @@ public class AttributePreservationTests
         return result;
     }
 
+    [Theory]
+    [InlineData(ACadVersion.AC1018, "dwg")]
+    [InlineData(ACadVersion.AC1024, "dwg")]
+    [InlineData(ACadVersion.AC1027, "dwg")]
+    [InlineData(ACadVersion.AC1032, "dwg")]
+    [InlineData(ACadVersion.AC1032, "ascii")]
+    [InlineData(ACadVersion.AC1032, "binary")]
+    public void AttributesKeepTheirFieldLengthAcrossTwoGenerations(ACadVersion version, string format)
+    {
+        var source = new CadDocument(version);
+        var block = new BlockRecord("FIELDS"); source.BlockRecords.Add(block);
+        // A field length without a vertical alignment must not become one (DXF 73 of an attribute is its field length).
+        block.Entities.Add(new AttributeDefinition { Tag = "THREE", Value = "V3", Height = 2, FieldLength = 3 });
+        block.Entities.Add(new AttributeDefinition { Tag = "ZERO", Value = "V0", Height = 2 });
+        block.Entities.Add(new AttributeDefinition { Tag = "TOP", Value = "VT", Height = 2, FieldLength = 7,
+            VerticalAlignment = TextVerticalAlignmentType.Top, HorizontalAlignment = TextHorizontalAlignment.Center });
+        var insert = new Insert(block); source.Entities.Add(insert);
+        // An attribute made from its definition takes the definition's field length, as AutoCAD's attributes do.
+        Assert.Equal(new short[] { 3, 0, 7 }, insert.Attributes.Select(a => a.FieldLength));
+        var expected = Texts(source).OfType<AttributeBase>().Select(Fields).ToArray();
+        var current = source;
+        for (var generation = 0; generation < 2; generation++)
+        {
+            current = Copy(current, format);
+            Assert.Equal(expected, Texts(current).OfType<AttributeBase>().Select(Fields));
+        }
+        static string Fields(AttributeBase a) => string.Join("|", a.ObjectName, a.Tag, a.FieldLength, a.VerticalAlignment);
+    }
+
     private static string Scalars(TextEntity text) => string.Join("|", text.Value, (short)text.Mirror, text.Thickness, text.Height, text.Style.Name);
     private static TextEntity[] Texts(CadDocument doc) => doc.BlockRecords.SelectMany(b => b.Entities)
         .OfType<TextEntity>().Concat(doc.Entities.OfType<Insert>().SelectMany(i => i.Attributes)).OrderBy(t => t.Value).ThenBy(t => t.ObjectName).ToArray();
