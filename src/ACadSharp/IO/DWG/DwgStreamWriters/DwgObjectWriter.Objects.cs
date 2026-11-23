@@ -120,9 +120,9 @@ internal partial class DwgObjectWriter : DwgSectionIO
 		this._writer.Write3BitDouble(action.LabelPosition);
 
 		this._writer.WriteBitLong(action.Entities.Count);
-		foreach (Entities.Entity entity in action.Entities)
+		foreach (CadObject cadObject in action.Entities)
 		{
-			this._writer.HandleReference(DwgReferenceType.SoftPointer, entity);
+			this._writer.HandleReference(DwgReferenceType.SoftPointer, cadObject);
 		}
 
 		this._writer.WriteBitLong(action.ParametersIds.Count);
@@ -186,8 +186,8 @@ internal partial class DwgObjectWriter : DwgSectionIO
 		this.writeEvaluationExpression(parameter);
 
 		this._writer.WriteVariableText(parameter.ElementName);
-		this._writer.WriteBitLong(parameter.Value98);
-		this._writer.WriteBitLong(parameter.Value99);
+		this._writer.WriteBitLong(parameter.ElementValue98);
+		this._writer.WriteBitLong(parameter.ElementValue99);
 		this._writer.WriteBitLong(parameter.Value1071);
 	}
 
@@ -493,7 +493,7 @@ internal partial class DwgObjectWriter : DwgSectionIO
 	{
 		this.writeBlock1PtParameter(parameter);
 
-		this._writer.WriteBit(parameter.ChainActions);
+		this._writer.WriteBit(parameter.Value281);
 		this._writer.WriteVariableText(parameter.Label);
 		this._writer.WriteVariableText(parameter.Description);
 		this._writer.WriteBit(parameter.Value91);

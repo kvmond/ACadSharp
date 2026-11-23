@@ -9,11 +9,12 @@ namespace ACadSharp.Objects.Evaluations;
 public abstract class BlockAction : BlockElement
 {
 	/// <summary>
-	/// Gets the list of <see cref="Entity"/> objects affected by this <see cref="BlockAction"/>.
+	/// Gets the list of objects affected by this <see cref="BlockAction"/>, in the order of the file and with any repetition kept: the
+	/// <see cref="Entity"/> objects of the block and, as AutoCAD writes a move action, grips and parameters of the same evaluation graph.
 	/// </summary>
 	[DxfCodeValue(DxfReferenceType.Count, 71)]
 	[DxfCollectionCodeValue(DxfReferenceType.Handle, 330)]
-	public List<Entity> Entities { get; } = new List<Entity>();
+	public List<CadObject> Entities { get; } = new List<CadObject>();
 
 	/// <summary>
 	/// Gets or sets the position of the action label.

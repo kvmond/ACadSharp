@@ -172,10 +172,9 @@ internal partial class DwgObjectReader : DwgSectionIO
 
 		//300 name
 		template.BlockElement.ElementName = this._mergedReaders.ReadVariableText();
-		//98
-		template.BlockElement.Value98 = this._mergedReaders.ReadBitLong();
-		//99
-		template.BlockElement.Value99 = this._mergedReaders.ReadBitLong();
+		//98 and 99 of the element, apart from the expression's (AirCAD F-38)
+		template.BlockElement.ElementValue98 = this._mergedReaders.ReadBitLong();
+		template.BlockElement.ElementValue99 = this._mergedReaders.ReadBitLong();
 		//1071
 		template.BlockElement.Value1071 = this._mergedReaders.ReadBitLong();
 	}
@@ -548,8 +547,8 @@ internal partial class DwgObjectReader : DwgSectionIO
 
 		this.readBlock1PtParameter(template);
 
-		//281
-		blockVisibilityParameter.ChainActions = this._mergedReaders.ReadBit();
+		//281: the visibility parameter's own flag. The parameter's 281 (chain actions) was read before it and stays as read (AirCAD F-38).
+		blockVisibilityParameter.Value281 = this._mergedReaders.ReadBit();
 		//301
 		blockVisibilityParameter.Label = this._mergedReaders.ReadVariableText();
 		//302

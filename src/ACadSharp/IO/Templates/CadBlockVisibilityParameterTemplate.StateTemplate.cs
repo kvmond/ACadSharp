@@ -10,9 +10,10 @@ namespace ACadSharp.IO.Templates
 		{
 			public BlockVisibilityParameter.State State { get; } = new BlockVisibilityParameter.State();
 
-			public HashSet<ulong> EntityHandles { get; } = new();
+			// The two lists as read: in order and with repetitions kept (AirCAD F-38).
+			public List<ulong> EntityHandles { get; } = new();
 
-			public HashSet<ulong> ExpressionHandles { get; } = new();
+			public List<ulong> ExpressionHandles { get; } = new();
 
 			public StateTemplate()
 			{

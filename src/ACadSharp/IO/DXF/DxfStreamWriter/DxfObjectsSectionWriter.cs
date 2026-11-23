@@ -816,7 +816,7 @@ internal class DxfObjectsSectionWriter : DxfSectionWriterBase
 		}
 
 		this._writer.Write(71, (short)action.Entities.Count);
-		foreach (Entity e in action.Entities)
+		foreach (CadObject e in action.Entities)
 		{
 			this._writer.WriteHandle(330, e);
 		}
@@ -909,9 +909,9 @@ internal class DxfObjectsSectionWriter : DxfSectionWriterBase
 
 		this._writer.Write(300, element.ElementName, map);
 
-		//Version?? (always the same, matches with AcDbEvalExpr)
-		this._writer.Write(98, 33, map);
-		this._writer.Write(99, 329, map);
+		// The element's own pair, not always the expression's (AirCAD F-38)
+		this._writer.Write(98, element.ElementValue98, map);
+		this._writer.Write(99, element.ElementValue99, map);
 
 		this._writer.Write(1071, element.Value1071, map);
 	}

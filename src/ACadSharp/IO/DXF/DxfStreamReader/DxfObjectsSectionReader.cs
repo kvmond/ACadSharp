@@ -285,7 +285,9 @@ internal class DxfObjectsSectionReader : DxfSectionReaderBase
 		switch (this._reader.Code)
 		{
 			default:
-				if (!this.tryAssignCurrentValue(template.CadObject, map.SubClasses[DxfSubclassMarker.BlockElement]))
+				// Only in the element's own subclass: its 98 and 99 are also the expression's codes (AirCAD F-38)
+				if (this.currentSubclass != DxfSubclassMarker.BlockElement
+					|| !this.tryAssignCurrentValue(template.CadObject, map.SubClasses[DxfSubclassMarker.BlockElement]))
 				{
 					return this.readEvaluationExpression(template, map);
 				}
@@ -783,7 +785,9 @@ internal class DxfObjectsSectionReader : DxfSectionReaderBase
 				}
 				return true;
 			default:
-				if (!this.tryAssignCurrentValue(template.CadObject, map.SubClasses[DxfSubclassMarker.BlockVisibilityParameter]))
+				// Only in its own subclass: its 281 is also the parameter's code (chain actions) (AirCAD F-38)
+				if (this.currentSubclass != DxfSubclassMarker.BlockVisibilityParameter
+					|| !this.tryAssignCurrentValue(template.CadObject, map.SubClasses[DxfSubclassMarker.BlockVisibilityParameter]))
 				{
 					return this.readBlock1PtParameter(template, map);
 				}
