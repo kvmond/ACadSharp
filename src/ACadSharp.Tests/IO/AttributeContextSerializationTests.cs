@@ -46,6 +46,32 @@ public class AttributeContextSerializationTests
     }
 
     [Theory]
+    [InlineData(ACadVersion.AC1018, 3)]
+    [InlineData(ACadVersion.AC1024, 4)]
+    [InlineData(ACadVersion.AC1027, 4)]
+    public void NonEmbeddedContextOfAnOlderVersionKeepsItsValuesInDwg(ACadVersion fileVersion, short version)
+    {
+        var document = Create(fileVersion); var source = Context(document);
+        source.Default = true; source.Version = version; source.Rotation = -.731;
+        source.AttachmentPoint = (AttachmentPointType)2;
+        source.InsertPoint = new XYZ(12.125, -83.75, 0); source.AlignmentPoint = new XYZ(-16.5, 91.25, 0);
+        var handle = source.Handle; var owner = source.Owner.Handle; var scale = source.Scale.Handle;
+        var current = document;
+        for (var generation = 0; generation < 2; generation++)
+        {
+            using var bytes = new MemoryStream(); DwgWriter.Write(bytes, current);
+            using var input = new MemoryStream(bytes.ToArray()); current = DwgReader.Read(input);
+            Assert.Equal(fileVersion, current.Header.Version);
+            var actual = current.GetCadObject<MTextAttributeObjectContextData>(handle);
+            Assert.NotNull(actual); Assert.Equal(version, actual.Version); Assert.True(actual.Default);
+            Assert.Equal(source.InsertPoint, actual.InsertPoint); Assert.Equal(source.AlignmentPoint, actual.AlignmentPoint);
+            Assert.Equal(source.Rotation, actual.Rotation); Assert.Equal(source.AttachmentPoint, actual.AttachmentPoint);
+            Assert.False(actual.Value290); Assert.Equal(owner, actual.Owner.Handle); Assert.Equal(scale, actual.Scale.Handle);
+            Assert.Same(current.GetCadObject(scale), actual.Scale);
+        }
+    }
+
+    [Theory]
     [InlineData("embedded")]
     [InlineData("elevation")]
     [InlineData("nonfinite")]
@@ -60,12 +86,24 @@ public class AttributeContextSerializationTests
             case "elevation": context.InsertPoint = new XYZ(1, 2, 3); break;
             case "nonfinite": context.Rotation = double.NaN; break;
             case "version": context.Version = 8; break;
-            case "legacy": doc.Header.Version = ACadVersion.AC1027; break;
+            case "legacy": doc.Header.Version = ACadVersion.AC1015; break;
         }
         var point = context.InsertPoint; var handle = context.Handle; var scale = context.Scale; var seed = doc.Header.HandleSeed;
-        using var output = new MemoryStream(); Assert.ThrowsAny<Exception>(() => DwgWriter.Write(output, doc));
+        using var output = new MemoryStream(); var error = Assert.ThrowsAny<Exception>(() => DwgWriter.Write(output, doc));
+        var step = 0UL;
+        if (problem == "legacy")
+        {
+            // The version is refused by the context writer, not by the writer as a whole. An AC1015 write moves the handle seed by itself
+            // before the objects are written: the same document without the context, written whole, moves it as far.
+            Assert.Contains("multiline attribute contexts", error.Message);
+            var plain = Create(); plain.Header.Version = ACadVersion.AC1015;
+            Assert.True(plain.RootDictionary.GetEntry<CadDictionary>("CONTEXTS").Remove("A"));
+            var before = plain.Header.HandleSeed;
+            using var written = new MemoryStream(); DwgWriter.Write(written, plain);
+            step = plain.Header.HandleSeed - before;
+        }
         Assert.Equal(point, context.InsertPoint); Assert.Equal(handle, context.Handle); Assert.Same(scale, context.Scale);
-        Assert.Equal(seed, doc.Header.HandleSeed); Assert.Same(context, doc.GetCadObject(handle));
+        Assert.Equal(seed + step, doc.Header.HandleSeed); Assert.Same(context, doc.GetCadObject(handle));
     }
 
     [Fact]
@@ -112,9 +150,9 @@ public class AttributeContextSerializationTests
         Assert.Same(document, Context(document).Scale.Document);
     }
 
-    private static CadDocument Create()
+    private static CadDocument Create(ACadVersion version = ACadVersion.AC1032)
     {
-        var doc = new CadDocument(ACadVersion.AC1032); var owner = new CadDictionary { Name = "CONTEXTS" };
+        var doc = new CadDocument(version); var owner = new CadDictionary { Name = "CONTEXTS" };
         doc.RootDictionary.Add(owner); var scale = new Scale { Name = "SYNTHETIC", PaperUnits = 2, DrawingUnits = 7 };
         doc.Scales.Add(scale); var context = new MTextAttributeObjectContextData { Name = "A", Scale = scale };
         owner.Add(context); context.AddReactor(owner); return doc;

@@ -962,8 +962,9 @@ internal partial class DwgObjectReader : DwgSectionIO
 
 	private CadTemplate readMTextAttributeObjectContextData()
 	{
-		// Only the non-embedded AC1032 form has been checked against original records.
-		if (this._version != ACadVersion.AC1032)
+		// Only the non-embedded form of AC1018, AC1024, AC1027 and AC1032 has been checked against original records; it is the
+		// same in the four versions (AC1018 files store the context version 3). AC1015 and AC1021 stay unread.
+		if (this._version is not (ACadVersion.AC1018 or ACadVersion.AC1024 or ACadVersion.AC1027 or ACadVersion.AC1032))
 			return null;
 		MTextAttributeObjectContextData contextData = new();
 		CadAnnotScaleObjectContextDataTemplate template = new CadAnnotScaleObjectContextDataTemplate(contextData);

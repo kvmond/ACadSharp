@@ -1626,10 +1626,12 @@ internal partial class DwgObjectWriter : DwgSectionIO
 		if (mtextContextData.Scale.Document != this._document
 			|| !ReferenceEquals(this._document.GetCadObject(mtextContextData.Scale.Handle), mtextContextData.Scale))
 			throw new InvalidDataException("Multiline attribute context SCALE must be registered in its document.");
-		if (this._version != ACadVersion.AC1032 || mtextContextData.Value290
+		// The versions whose form has been checked against original records (the reader reads the same ones).
+		if (this._version is not (ACadVersion.AC1018 or ACadVersion.AC1024 or ACadVersion.AC1027 or ACadVersion.AC1032)
+			|| mtextContextData.Value290
 			|| (mtextContextData.Version != 3 && mtextContextData.Version != 4)
 			|| mtextContextData.InsertPoint.Z != 0 || mtextContextData.AlignmentPoint.Z != 0)
-			throw new NotSupportedException("Only planar, non-embedded AC1032 multiline attribute contexts are supported.");
+			throw new NotSupportedException("Only planar, non-embedded multiline attribute contexts of AC1018, AC1024, AC1027 and AC1032 are supported.");
 		foreach (double value in new[] { mtextContextData.Rotation, mtextContextData.InsertPoint.X, mtextContextData.InsertPoint.Y,
 			mtextContextData.AlignmentPoint.X, mtextContextData.AlignmentPoint.Y })
 			if (double.IsNaN(value) || double.IsInfinity(value))
