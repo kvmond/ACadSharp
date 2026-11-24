@@ -106,6 +106,15 @@ public abstract class Entity : CadObject, IEntity
 	private ulong _unresolvedPlotStyleHandle;
 
 	/// <summary>
+	/// Whether the entity casts and receives shadows (DXF 284 in AcDbEntity; the shadow flags byte of the common entity data in DWG from AC1021 on).
+	/// </summary>
+	/// <remarks>
+	/// AirCAD W1-8: the reader dropped the byte and the writer wrote 0, so a saved copy reset every entity to casting and receiving shadows. The value is
+	/// kept as read, also one outside the four defined.
+	/// </remarks>
+	public ShadowMode ShadowMode { get; set; } = ShadowMode.CastsAndReceivesShadows;
+
+	/// <summary>
 	/// Gets the list of proxy geometries for this entity.
 	/// </summary>
 	public List<IProxyGeometry> ProxyGeometries { get; } = new();

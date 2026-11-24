@@ -236,6 +236,12 @@ internal abstract partial class DxfSectionWriterBase
 
 		this._writer.Write(370, entity.LineWeight);
 		this.writePlotStyle(entity);
+
+		// AirCAD W1-8: AutoCAD writes the shadow mode only when it is not the default, and only from AC1021 on.
+		if (entity.ShadowMode != ShadowMode.CastsAndReceivesShadows && this._document.Header.Version >= ACadVersion.AC1021)
+		{
+			this._writer.Write(284, (short)entity.ShadowMode);
+		}
 	}
 
 	private void writePlotStyle(Entity entity)

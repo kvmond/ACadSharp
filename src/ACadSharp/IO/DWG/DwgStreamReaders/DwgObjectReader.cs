@@ -470,8 +470,8 @@ namespace ACadSharp.IO.DWG
 					template.MaterialHandle = this.handleReference();
 				}
 
-				//Shadow flags RC
-				this._objectReader.ReadByte();
+				//Shadow flags RC (AirCAD W1-8: kept, it was dropped)
+				entity.ShadowMode = (ShadowMode)this._objectReader.ReadByte();
 			}
 
 			//R2000 +:

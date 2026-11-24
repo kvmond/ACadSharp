@@ -278,10 +278,22 @@ internal abstract class DxfSectionReaderBase
 		this._reader.ReadNext();
 
 		DxfMap map = DxfMap.Create<T>();
+		// AirCAD W1-8: the subclass marker last read, kept here because some entity readers take the markers without setting currentSubclass.
+		string subclass = null;
 
 		while (this._reader.DxfCode != DxfCode.Start)
 		{
-			if (!readEntity(template, map))
+			if (this._reader.Code == 100)
+			{
+				subclass = this._reader.ValueAsString;
+			}
+
+			// The shadow mode is 284 in AcDbEntity only: a table's 284 in AcDbTable is a cell border's.
+			if (this._reader.Code == 284 && subclass == DxfSubclassMarker.Entity)
+			{
+				template.CadObject.ShadowMode = (ShadowMode)this._reader.ValueAsShort;
+			}
+			else if (!readEntity(template, map))
 			{
 				this.readCommonEntityCodes(template, out bool isExtendedData, map);
 				if (isExtendedData)

@@ -1010,8 +1010,8 @@ internal partial class DwgObjectWriter : DwgSectionIO
 				this._writer.HandleReference(DwgReferenceType.HardPointer, entity.Material);
 			}
 
-			//Shadow flags RC
-			this._writer.WriteByte(0);
+			//Shadow flags RC (AirCAD W1-8: the entity's own, it was always 0)
+			this._writer.WriteByte((byte)entity.ShadowMode);
 		}
 
 		//R2000 +:
