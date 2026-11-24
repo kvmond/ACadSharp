@@ -35,7 +35,8 @@ namespace ACadSharp.IO.Templates
 
 			if (builder.TryGetCadObject(this.MaterialHandle, out Material material))
 			{
-
+				//Air CAD W1-4: the material was found and not kept, so a written copy lost it
+				this.CadObject.Material = material;
 			}
 			else
 			{

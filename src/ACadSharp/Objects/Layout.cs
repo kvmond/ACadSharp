@@ -88,6 +88,12 @@ public class Layout : PlotSettings, IDxfClassDefined
 	}
 
 	/// <summary>
+	/// The viewport table entry that was last active in the model layout: AutoCAD's model layout names its <c>*Active</c> VPORT in DXF 331, where a
+	/// paper layout names a viewport entity (<see cref="LastActiveViewport"/>). Kept so that a written copy names it again (Air CAD W1-2).
+	/// </summary>
+	public VPort LastActiveVPort { get; internal set; }
+
+	/// <summary>
 	/// Layout flags.
 	/// </summary>
 	[DxfCodeValue(70)]

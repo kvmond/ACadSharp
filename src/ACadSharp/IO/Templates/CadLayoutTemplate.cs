@@ -38,9 +38,15 @@ namespace ACadSharp.IO.Templates
 				this.CadObject.AssociatedBlock = record;
 			}
 
-			if (builder.TryGetCadObject(this.ActiveViewportHandle, out Viewport viewport))
+			// DXF 331: a viewport entity in a paper layout, the *Active VPORT in the model layout (the DXF reader gives the second handle).
+			ulong? lastActive = this.ActiveViewportHandle ?? this.LasActiveViewportHandle;
+			if (builder.TryGetCadObject(lastActive, out Viewport viewport))
 			{
 				this.CadObject.LastActiveViewport = viewport;
+			}
+			else if (builder.TryGetCadObject(lastActive, out VPort vport))
+			{
+				this.CadObject.LastActiveVPort = vport;
 			}
 
 			if (builder.TryGetCadObject(this.BaseUcsHandle, out UCS ucs))

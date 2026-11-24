@@ -33,8 +33,11 @@ internal partial class DwgObjectWriter : DwgSectionIO
 
 	public bool WriteXRecords { get; }
 
+	// The inserts of every space and block in handle order (Air CAD W1-3: only the model space's were listed, so a block record of the copy lacked
+	// its paper space and nested inserts). AutoCAD does not store every list in handle order and makes the list again when it opens a drawing; of
+	// the orders measured, handle order matched the most stored lists.
 	private ILookup<string, Insert> InsertsByBlockName =>
-		this._insertsByBlockName ??= this._document.Entities.OfType<Insert>().ToLookup(i => i.Block?.Name);
+		this._insertsByBlockName ??= this._document.BlockRecords.SelectMany(r => r.Entities).OfType<Insert>().OrderBy(i => i.Handle).ToLookup(i => i.Block?.Name);
 
 	private readonly Dictionary<BlockRecord, Entity[]> _blockCompatibleEntities = new();
 
@@ -131,6 +134,15 @@ internal partial class DwgObjectWriter : DwgSectionIO
 		}
 
 		return 0;
+	}
+
+	/// <summary>
+	/// Whether the written document holds this object, so that a handle written for it names an object of the file (Air CAD W1-2 and W1-4: a
+	/// reference kept from another document, or to an object since removed, is written null).
+	/// </summary>
+	private bool holds(CadObject cadObject)
+	{
+		return cadObject.Document == this._document && ReferenceEquals(this._document.GetCadObject(cadObject.Handle), cadObject);
 	}
 
 	private bool isEntitySupported(Entity entity)
@@ -1242,8 +1254,8 @@ internal partial class DwgObjectWriter : DwgSectionIO
 		//R2007+:
 		if (this.R2007Plus)
 		{
-			//H 347 Material
-			this._writer.HandleReference(DwgReferenceType.HardPointer, 0);
+			//H 347 Material: the layer's own when the document holds it (Air CAD W1-4: it was always written null)
+			this._writer.HandleReference(DwgReferenceType.HardPointer, layer.Material is Material material && this.holds(material) ? material : null);
 		}
 
 		//Common:
