@@ -47,6 +47,11 @@ namespace ACadSharp.IO.Templates
 					try
 					{
 						this.CadObject.Add(entry.Name, entry);
+						//AirCAD W1-16: a DWG file's key that is not the entry's name is written back (DXF reads stay as before)
+						if (builder is DwgDocumentBuilder)
+						{
+							this.CadObject.SetKeyAsRead(entry, item.Key);
+						}
 					}
 					catch (System.Exception ex)
 					{

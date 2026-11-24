@@ -929,7 +929,8 @@ internal partial class DwgObjectWriter : DwgSectionIO
 				continue;
 			}
 
-			this._writer.WriteVariableText(item.Name);
+			//AirCAD W1-16: the key the file gave the entry, while it keeps the name it was read with
+			this._writer.WriteVariableText(dictionary.WrittenKey(item));
 			this._writer.HandleReference(DwgReferenceType.SoftOwnership, item.Handle);
 		}
 

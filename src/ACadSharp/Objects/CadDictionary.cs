@@ -58,6 +58,42 @@ public class CadDictionary : NonGraphicalObject, IObservableCadCollection<NonGra
 	/// </remarks>
 	internal bool MadeByLibrary { get; set; }
 
+	/// <summary>
+	/// AirCAD W1-16: the key a DWG file gave an entry where it differs from the entry's name, by the entry's handle, with the name the entry had
+	/// when read. The library keys its entries by their names, so AutoCAD's anonymous scale-list keys (A0, A1, ...) and a multiline style's
+	/// "Standard" beside the style's own "STANDARD" were written as the names.
+	/// </summary>
+	private Dictionary<ulong, (string Key, string Name)> _keysAsRead;
+
+	/// <summary>AirCAD W1-16: keeps <paramref name="key"/>, the key the file gave <paramref name="entry"/>, when it is not the entry's name.</summary>
+	internal void SetKeyAsRead(NonGraphicalObject entry, string key)
+	{
+		if (string.IsNullOrEmpty(key) || entry.Handle == 0 || key == entry.Name)
+		{
+			return;
+		}
+
+		this._keysAsRead ??= new Dictionary<ulong, (string, string)>();
+		this._keysAsRead[entry.Handle] = (key, entry.Name);
+	}
+
+	/// <summary>
+	/// AirCAD W1-16: the name a DWG writer writes for <paramref name="entry"/>: the key the file gave it while the entry still has the name it was
+	/// read with and no other entry has that key as its name; otherwise its name, as before.
+	/// </summary>
+	internal string WrittenKey(NonGraphicalObject entry)
+	{
+		if (this._keysAsRead != null && this._keysAsRead.TryGetValue(entry.Handle, out var kept) && kept.Name == entry.Name
+			&& ReferenceEquals(entry.Owner, this)
+			// the keys compare without case: "Standard" finds the entry itself under "STANDARD", which is no other entry
+			&& !(this._entries.TryGetValue(kept.Key, out NonGraphicalObject other) && !ReferenceEquals(other, entry)))
+		{
+			return kept.Key;
+		}
+
+		return entry.Name;
+	}
+
 	/// <inheritdoc/>
 	public override string ObjectName => DxfFileToken.ObjectDictionary;
 
@@ -274,6 +310,7 @@ public class CadDictionary : NonGraphicalObject, IObservableCadCollection<NonGra
 
 		clone.OnAdd = null;
 		clone.OnRemove = null;
+		clone._keysAsRead = null;
 
 		clone._entries = new Dictionary<string, NonGraphicalObject>();
 		foreach (NonGraphicalObject item in this._entries.Values)
@@ -329,6 +366,7 @@ public class CadDictionary : NonGraphicalObject, IObservableCadCollection<NonGra
 	{
 		if (this._entries.Remove(key, out item))
 		{
+			this._keysAsRead?.Remove(item.Handle);
 			item.Owner = null;
 			OnRemove?.Invoke(this, new CollectionChangedEventArgs(item));
 			item.OnNameChanged -= this.onEntryNameChanged;
