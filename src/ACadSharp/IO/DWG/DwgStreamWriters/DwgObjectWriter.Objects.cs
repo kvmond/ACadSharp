@@ -1339,8 +1339,9 @@ internal partial class DwgObjectWriter : DwgSectionIO
 		//Common:
 		//330 associated paperspace block record handle(soft pointer)
 		this._writer.HandleReference(DwgReferenceType.SoftPointer, layout.AssociatedBlock);
-		//331 last active viewport handle(soft pointer): a viewport entity, or in the model layout the *Active VPORT (Air CAD W1-2)
-		IHandledCadObject lastActive = layout.LastActiveViewport;
+		//331 last active viewport handle(soft pointer): a viewport entity, or in the model layout the *Active VPORT (Air CAD W1-2); only one the file
+		//holds (a viewport removed, of another document or not written is written null)
+		IHandledCadObject lastActive = layout.LastActiveViewport is Entities.Viewport lastViewport && this.holds(lastViewport) && this.writes(lastViewport) ? lastViewport : null;
 		if (lastActive == null && layout.LastActiveVPort is Tables.VPort vport && this.holds(vport))
 		{
 			lastActive = vport;

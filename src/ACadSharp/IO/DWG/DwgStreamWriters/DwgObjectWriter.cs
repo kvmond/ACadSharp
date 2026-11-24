@@ -33,11 +33,13 @@ internal partial class DwgObjectWriter : DwgSectionIO
 
 	public bool WriteXRecords { get; }
 
-	// The inserts of every space and block in handle order (Air CAD W1-3: only the model space's were listed, so a block record of the copy lacked
-	// its paper space and nested inserts). AutoCAD does not store every list in handle order and makes the list again when it opens a drawing; of
-	// the orders measured, handle order matched the most stored lists.
+	// The inserts the file holds, of every space and block, in handle order (Air CAD W1-3: only the model space's were listed, so a block record of
+	// the copy lacked its paper space and nested inserts; one the writer leaves out, a table before AC1024 or an invalid insert, is not listed, so
+	// no handle names an object the file lacks). AutoCAD does not store every list in handle order and makes the list again when it opens a drawing;
+	// of the orders measured, handle order matched the most stored lists.
 	private ILookup<string, Insert> InsertsByBlockName =>
-		this._insertsByBlockName ??= this._document.BlockRecords.SelectMany(r => r.Entities).OfType<Insert>().OrderBy(i => i.Handle).ToLookup(i => i.Block?.Name);
+		this._insertsByBlockName ??= this._document.BlockRecords.SelectMany(r => r.Entities).OfType<Insert>().Where(this.writes)
+			.OrderBy(i => i.Handle).ToLookup(i => i.Block?.Name);
 
 	private readonly Dictionary<BlockRecord, Entity[]> _blockCompatibleEntities = new();
 
@@ -147,9 +149,31 @@ internal partial class DwgObjectWriter : DwgSectionIO
 
 	private bool isEntitySupported(Entity entity)
 	{
+		if (this.writes(entity))
+		{
+			return true;
+		}
+
 		if (!entity.IsValid(CadFileFormat.DWG, this._version))
 		{
 			this.notify($"Invalid entity {entity.GetType().FullName} with handle {entity.Handle}", NotificationType.Warning);
+		}
+		else if (entity is not UnknownEntity and not Shape)
+		{
+			this.notify($"Entity type not implemented {entity.GetType().FullName}", NotificationType.NotImplemented);
+		}
+
+		return false;
+	}
+
+	/// <summary>
+	/// Whether the writer writes this entity, without the notices <see cref="isEntitySupported"/> gives (Air CAD W1-3: a handle list names only what
+	/// the file holds).
+	/// </summary>
+	private bool writes(Entity entity)
+	{
+		if (!entity.IsValid(CadFileFormat.DWG, this._version))
+		{
 			return false;
 		}
 
@@ -166,7 +190,6 @@ internal partial class DwgObjectWriter : DwgSectionIO
 			case Solid3D:
 			case CadBody:
 			case Region:
-				this.notify($"Entity type not implemented {entity.GetType().FullName}", NotificationType.NotImplemented);
 				return false;
 			default:
 				return true;
