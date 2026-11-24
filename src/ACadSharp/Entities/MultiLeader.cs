@@ -619,7 +619,7 @@ public partial class MultiLeader : Entity, IDxfClassDefined
 			CppClassName = DxfSubclassMarker.MultiLeader,
 			DwgVersion = ACadVersion.MC0_0,
 			DxfName = DxfFileToken.EntityMultiLeader,
-			ItemClassId = 499,
+			ItemClassId = 498,
 			MaintenanceVersion = 0,
 			ProxyFlags = ProxyFlags.EraseAllowed | ProxyFlags.DisablesProxyWarningDialog,
 			WasZombie = false,

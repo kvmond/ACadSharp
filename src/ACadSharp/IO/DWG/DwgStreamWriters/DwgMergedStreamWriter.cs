@@ -175,6 +175,11 @@ namespace ACadSharp.IO.DWG
 			{
 				arr[3] = 0b11000000;
 			}
+			else if (value.IsByBlock)
+			{
+				//AutoCAD writes ByBlock as 0xC1000000, not as the index 0 (0xC3000000)
+				arr[3] = 0b1100_0001;
+			}
 			else
 			{
 				arr[3] = 0b1100_0011;
