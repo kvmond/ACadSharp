@@ -10,6 +10,12 @@ namespace ACadSharp.IO.DWG
 		/// <inheritdoc/>
 		public override Color ReadCmColor(bool useTextStream = false)
 		{
+			return this.ReadCmColor(out _, useTextStream);
+		}
+
+		/// <inheritdoc/>
+		public override Color ReadCmColor(out CmColorNames names, bool useTextStream = false)
+		{
 			Color color = default;
 
 			//CMC:
@@ -56,6 +62,8 @@ namespace ACadSharp.IO.DWG
 				bookName = this.ReadVariableText();
 			}
 
+			//AirCAD W1-6: the names are kept with the colour they name
+			names = (id & 3) != 0 ? new CmColorNames(color, id, colorName, bookName) : null;
 			return color;
 		}
 

@@ -148,9 +148,14 @@ namespace ACadSharp.IO.DWG
 
 		public void WriteCmColor(Color value, bool useTextStream = false)
 		{
+			this.WriteCmColor(value, null, useTextStream);
+		}
+
+		public void WriteCmColor(Color value, CmColorNames names, bool useTextStream = false)
+		{
 			if (!(this.Main is DwgStreamWriterAC18) && !useTextStream)
 			{
-				this.Main.WriteCmColor(value);
+				this.Main.WriteCmColor(value, names);
 				return;
 			}
 
@@ -190,11 +195,22 @@ namespace ACadSharp.IO.DWG
 			//BL: RGB value
 			this.WriteBitLong(LittleEndianConverter.Instance.ToInt32(arr));
 
-			//RC: Color Byte
-			this.WriteByte(0);
+			//RC: Color Byte (AirCAD W1-6: the names of the colour, it was always 0)
+			names = CmColorNames.For(names, value);
+			byte flags = names?.Flags ?? 0;
+			this.WriteByte(flags);
 
 			//(&1 => color name follows(TV),
+			if ((flags & 1) == 1)
+			{
+				this.WriteVariableText(names.ColorName);
+			}
+
 			//&2 => book name follows(TV))
+			if ((flags & 2) == 2)
+			{
+				this.WriteVariableText(names.BookName);
+			}
 		}
 
 		public void WriteEnColor(Color color, Transparency transparency)

@@ -26,6 +26,13 @@ public class Layer : TableEntry
 	public static Layer Defpoints { get { return new Layer(DefpointsName) { PlotFlag = false }; } }
 
 	/// <summary>
+	/// The names of the layer's colour when it comes from a colour book (DWG: after the CMC colour; DXF 430, <c>BOOK$COLOR</c>). Written only while
+	/// <see cref="Color"/> is the colour they name.
+	/// </summary>
+	/// <remarks>AirCAD W1-6: read and dropped before, so a saved copy lost the names.</remarks>
+	public CmColorNames ColorNames { get; set; }
+
+	/// <summary>
 	/// Color
 	/// </summary>
 	/// <remarks>

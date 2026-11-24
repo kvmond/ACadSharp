@@ -234,6 +234,11 @@ namespace ACadSharp.IO.DWG
 		/// <returns></returns>
 		Color ReadCmColor(bool useTextStream = false);
 
+		/// <summary>
+		/// CMC : CmColor value with the colour and book names that follow it (R2004 and later; null when none follows or before R2004).
+		/// </summary>
+		Color ReadCmColor(out CmColorNames names, bool useTextStream = false);
+
 		Color ReadColorByIndex();
 
 		/// <summary>

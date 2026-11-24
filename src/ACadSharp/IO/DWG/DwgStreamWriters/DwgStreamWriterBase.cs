@@ -379,6 +379,12 @@ namespace ACadSharp.IO.DWG
 			this.WriteBitShort(index);
 		}
 
+		public virtual void WriteCmColor(Color value, CmColorNames names, bool useTextStream = false)
+		{
+			//R15 and earlier: no names
+			this.WriteCmColor(value, useTextStream);
+		}
+
 		public virtual void WriteEnColor(Color color, Transparency transparency)
 		{
 			this.WriteCmColor(color);

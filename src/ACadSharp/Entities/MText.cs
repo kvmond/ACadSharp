@@ -39,6 +39,13 @@ public partial class MText : Entity, IText
 	public Color BackgroundColor { get; set; }
 
 	/// <summary>
+	/// The names of the background colour when it comes from a colour book (DWG: after the CMC colour). Written only while
+	/// <see cref="BackgroundColor"/> is the colour they name.
+	/// </summary>
+	/// <remarks>AirCAD W1-6: read and dropped before, so a saved copy lost the names. DXF does not read or write them yet.</remarks>
+	public CmColorNames BackgroundColorNames { get; set; }
+
+	/// <summary>
 	/// Background fill setting
 	/// </summary>
 	[DxfCodeValue(90)]

@@ -29,6 +29,8 @@ namespace ACadSharp.IO.Templates
 			vertex.LineTypeScale = this.CadObject.LineTypeScale;
 			vertex.IsInvisible = this.CadObject.IsInvisible;
 			vertex.Transparency = this.CadObject.Transparency;
+			//AirCAD W1-8: the shadow mode read in AcDbEntity before the subclass made this object
+			vertex.ShadowMode = this.CadObject.ShadowMode;
 
 			Vertex placeholder = this.CadObject as Vertex;
 

@@ -31,6 +31,8 @@ namespace ACadSharp.IO.Templates
 			polyLine.LineTypeScale = this.CadObject.LineTypeScale;
 			polyLine.IsInvisible = this.CadObject.IsInvisible;
 			polyLine.Transparency = this.CadObject.Transparency;
+			//AirCAD W1-8: the shadow mode read in AcDbEntity before the subclass made this object
+			polyLine.ShadowMode = this.CadObject.ShadowMode;
 
 			this.CadObject = polyLine;
 		}

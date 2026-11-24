@@ -158,9 +158,14 @@ namespace ACadSharp.IO.DWG
 
 		public Color ReadCmColor(bool useTextStream = false)
 		{
+			return this.ReadCmColor(out _, useTextStream);
+		}
+
+		public Color ReadCmColor(out CmColorNames names, bool useTextStream = false)
+		{
 			if (!(this._mainReader is DwgStreamReaderAC18) && !useTextStream)
 			{
-				return this._mainReader.ReadCmColor();
+				return this._mainReader.ReadCmColor(out names);
 			}
 
 			Color color = default;
@@ -212,6 +217,8 @@ namespace ACadSharp.IO.DWG
 				bookName = this.ReadVariableText();
 			}
 
+			//AirCAD W1-6: the names are kept with the colour they name
+			names = (id & 3) != 0 ? new CmColorNames(color, id, colorName, bookName) : null;
 			return color;
 		}
 

@@ -1533,7 +1533,7 @@ internal partial class DwgObjectWriter : DwgSectionIO
 				//Background scale factor	BL 45 default = 1.5
 				this._writer.WriteBitDouble(mtext.BackgroundScale);
 				//Background color CMC 63
-				this._writer.WriteCmColor(mtext.BackgroundColor);
+				this._writer.WriteCmColor(mtext.BackgroundColor, mtext.BackgroundColorNames);
 				//Background transparency BL 441
 				this._writer.WriteBitLong(mtext.BackgroundTransparency.Value);
 			}

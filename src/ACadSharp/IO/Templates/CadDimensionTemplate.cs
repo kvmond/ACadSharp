@@ -83,6 +83,8 @@ internal class CadDimensionTemplate : CadEntityTemplate
 		dimension.LineTypeScale = this.CadObject.LineTypeScale;
 		dimension.IsInvisible = this.CadObject.IsInvisible;
 		dimension.Transparency = this.CadObject.Transparency;
+		//AirCAD W1-8: the shadow mode read in AcDbEntity before the subclass made this object
+		dimension.ShadowMode = this.CadObject.ShadowMode;
 
 		Dimension source = this.CadObject as Dimension;
 

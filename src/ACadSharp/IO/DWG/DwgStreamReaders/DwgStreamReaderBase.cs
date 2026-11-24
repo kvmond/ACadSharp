@@ -924,6 +924,14 @@ namespace ACadSharp.IO.DWG
 		}
 
 		/// <inheritdoc/>
+		public virtual Color ReadCmColor(out CmColorNames names, bool useTextStream = false)
+		{
+			//R15 and earlier: no names
+			names = null;
+			return this.ReadCmColor(useTextStream);
+		}
+
+		/// <inheritdoc/>
 		public virtual Color ReadEnColor(out Transparency transparency, out bool flag)
 		{
 			flag = false;

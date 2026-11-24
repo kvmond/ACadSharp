@@ -56,6 +56,11 @@ namespace ACadSharp.IO.DWG
 
 		void WriteCmColor(Color value, bool useTextStream = false);
 
+		/// <summary>
+		/// CMC with the colour and book names that follow it when <paramref name="names"/> name <paramref name="value"/> (R2004 and later).
+		/// </summary>
+		void WriteCmColor(Color value, CmColorNames names, bool useTextStream = false);
+
 		void WriteEnColor(Color color, Transparency transparency);
 
 		void WriteEnColor(Color color, Transparency transparency, bool isBookColor);

@@ -1261,8 +1261,8 @@ internal partial class DwgObjectWriter : DwgSectionIO
 		}
 
 		//Common:
-		//Color CMC 62
-		this._writer.WriteCmColor(layer.Color);
+		//Color CMC 62 (AirCAD W1-6: with its names when they name it)
+		this._writer.WriteCmColor(layer.Color, layer.ColorNames);
 
 		//External reference block handle(hard pointer)
 		this.writeXrefBlock(layer);

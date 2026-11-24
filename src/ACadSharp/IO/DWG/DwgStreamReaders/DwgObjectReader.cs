@@ -2338,8 +2338,10 @@ namespace ACadSharp.IO.DWG
 
 			//Common:
 			//Color CMC 62
-			var color = this._mergedReaders.ReadCmColor();
+			var color = this._mergedReaders.ReadCmColor(out CmColorNames colorNames);
 			layer.Color = color.IsByBlock || color.IsByLayer ? Color.Default : color;
+			//AirCAD W1-6: the colour's names (a colour book colour) are kept; they name only the colour read
+			layer.ColorNames = CmColorNames.For(colorNames, layer.Color);
 
 			//Handle refs H Layer control (soft pointer)
 			//[Reactors(soft pointer)]
@@ -3678,7 +3680,9 @@ namespace ACadSharp.IO.DWG
 					//Background scale factor	BL 45 default = 1.5
 					mtext.BackgroundScale = this._objectReader.ReadBitDouble();
 					//Background color CMC 63
-					mtext.BackgroundColor = this._mergedReaders.ReadCmColor();
+					mtext.BackgroundColor = this._mergedReaders.ReadCmColor(out CmColorNames backgroundNames);
+					//AirCAD W1-6: the colour's names are kept
+					mtext.BackgroundColorNames = backgroundNames;
 					//Background transparency BL 441
 					mtext.BackgroundTransparency = new Transparency((short)this._objectReader.ReadBitLong());
 				}

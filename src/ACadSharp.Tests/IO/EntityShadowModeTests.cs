@@ -16,7 +16,7 @@ namespace ACadSharp.Tests.IO;
 /// </summary>
 public class EntityShadowModeTests
 {
-	public static TheoryData<ACadVersion> Versions => new() { ACadVersion.AC1018, ACadVersion.AC1024, ACadVersion.AC1027, ACadVersion.AC1032 };
+	public static TheoryData<ACadVersion> Versions => new() { ACadVersion.AC1015, ACadVersion.AC1018, ACadVersion.AC1024, ACadVersion.AC1027, ACadVersion.AC1032 };
 
 	private static readonly ShadowMode[] Modes = { ShadowMode.CastsAndReceivesShadows, ShadowMode.CastsShadows, ShadowMode.ReceivesShadows, ShadowMode.IgnoresShadows };
 
@@ -68,6 +68,44 @@ public class EntityShadowModeTests
 		Assert.Equal(Expected(version), ModesOf(Read(lines)));
 		var written = Enumerable.Range(start, end - start).Count(i => i % 2 == 0 && lines[i].Trim() == "284");
 		Assert.Equal(version >= ACadVersion.AC1021 ? 3 : 0, written);
+	}
+
+	/// <summary>
+	/// The DXF readers that make the entity anew at its subclass marker (POLYLINE, VERTEX, DIMENSION) keep the 284 read in AcDbEntity before it
+	/// (the review of W1-8, finding 1: the new object took the colour and the lineweight, not the shadow mode). A value the DXF does not define is
+	/// not written.
+	/// </summary>
+	[Fact]
+	public void ADxfPolylineItsVerticesAndADimensionKeepTheirShadowMode()
+	{
+		var document = new CadDocument();
+		document.Header.Version = ACadVersion.AC1032;
+		var polyline = new Polyline2D(new[] { new Vertex2D(XYZ.Zero), new Vertex2D(new XYZ(1, 0, 0)), new Vertex2D(new XYZ(1, 1, 0)) }, false)
+		{
+			ShadowMode = ShadowMode.IgnoresShadows,
+		};
+		document.Entities.Add(polyline);
+		foreach (var vertex in polyline.Vertices)
+		{
+			vertex.ShadowMode = ShadowMode.ReceivesShadows;
+		}
+		var dimension = new DimensionAligned(XYZ.Zero, new XYZ(10, 0, 0)) { ShadowMode = ShadowMode.CastsShadows };
+		var picture = new ACadSharp.Tables.BlockRecord("*D1");
+		picture.Entities.Add(new Line(XYZ.Zero, XYZ.AxisX));
+		dimension.Block = picture;
+		document.Entities.Add(dimension);
+		document.Entities.Add(new Line(new XYZ(0, 9, 0), new XYZ(1, 9, 0)) { ShadowMode = (ShadowMode)7 });
+
+		using var stream = new MemoryStream();
+		DxfWriter.Write(stream, document);
+		var read = DxfReader.Read(new MemoryStream(stream.ToArray()));
+
+		var readPolyline = read.Entities.OfType<Polyline2D>().Single();
+		Assert.Equal(ShadowMode.IgnoresShadows, readPolyline.ShadowMode);
+		Assert.Equal(3, readPolyline.Vertices.Count());
+		Assert.All(readPolyline.Vertices, v => Assert.Equal(ShadowMode.ReceivesShadows, v.ShadowMode));
+		Assert.Equal(ShadowMode.CastsShadows, read.Entities.OfType<DimensionAligned>().Single().ShadowMode);
+		Assert.Equal(ShadowMode.CastsAndReceivesShadows, read.Entities.OfType<Line>().Single(l => l.StartPoint.Y == 9).ShadowMode);
 	}
 
 	/// <summary>A 284 after another subclass marker is not the entity's shadow mode: the line of mode 1 carries its 284 into AcDbLine instead.</summary>

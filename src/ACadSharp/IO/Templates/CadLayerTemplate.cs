@@ -13,7 +13,7 @@ namespace ACadSharp.IO.Templates
 
 		public string LineTypeName { get; set; }
 
-		//TODO: Implement the color name for true color, dxf code 430
+		/// <summary>DXF 430 of a layer, <c>BOOK$COLOR</c>: the names of its colour book colour (AirCAD W1-6).</summary>
 		public string TrueColorName { get; set; }
 
 		public CadLayerTemplate() : base(new Layer()) { }
@@ -25,6 +25,12 @@ namespace ACadSharp.IO.Templates
 			//TODO: finish the build for the layer
 
 			base.build(builder);
+
+			if (this.TrueColorName != null && this.CadObject.Color.IsTrueColor)
+			{
+				//AirCAD W1-6: the names of the colour read from DXF (a colour book colour is a true colour; a 430 without 420 names nothing)
+				this.CadObject.ColorNames = CmColorNames.FromDxf(this.TrueColorName, this.CadObject.Color);
+			}
 
 			this.CadObject.PlotStyleName = this.PlotStyleHandle;
 			if (this.PlotStyleHandle != 0)

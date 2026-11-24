@@ -250,6 +250,17 @@ namespace ACadSharp.IO.DXF
 				this._writer.WriteTrueColor(420, layer.Color, map);
 			}
 
+			//AirCAD W1-6: the names of a colour book colour, BOOK$COLOR as AutoCAD writes them: only beside a true colour's 420 and only when there
+			//is a name to write
+			if (layer.Color.IsTrueColor && CmColorNames.For(layer.ColorNames, layer.Color) is CmColorNames names)
+			{
+				string text = string.IsNullOrEmpty(names.BookName) ? names.ColorName : $"{names.BookName}${names.ColorName}";
+				if (!string.IsNullOrEmpty(text))
+				{
+					this._writer.Write(430, text, map);
+				}
+			}
+
 			this._writer.Write(6, layer.LineType.Name, map);
 
 			this._writer.Write(290, layer.PlotFlag, map);
