@@ -705,9 +705,10 @@ namespace ACadSharp.IO.DWG
 				//BS : DIMJUST
 				this._writer.WriteBitShort((short)this._header.DimensionTextHorizontalAlignment);
 				//B : DIMSD1
-				this._writer.WriteBit(this._header.DimensionSuppressFirstExtensionLine);
+				//AirCAD W1-12: the dimension lines' switches, not the extension lines' (DIMSE1 and DIMSE2 were written twice and DIMSD1 and DIMSD2 lost)
+				this._writer.WriteBit(this._header.DimensionSuppressFirstDimensionLine);
 				//B : DIMSD2
-				this._writer.WriteBit(this._header.DimensionSuppressSecondExtensionLine);
+				this._writer.WriteBit(this._header.DimensionSuppressSecondDimensionLine);
 				//BS : DIMTOLJ
 				this._writer.WriteBitShort((short)this._header.DimensionToleranceAlignment);
 				//BS : DIMTZIN

@@ -47,6 +47,17 @@ public class CadDictionary : NonGraphicalObject, IObservableCadCollection<NonGra
 	[DxfCodeValue(280)]
 	public bool HardOwnerFlag { get; set; } = false;
 
+	/// <summary>
+	/// Whether the library made this dictionary for a collection the file lacked (<see cref="CadDocument.UpdateCollectionsOfARead"/>); never for a new
+	/// document's dictionaries.
+	/// </summary>
+	/// <remarks>
+	/// AirCAD W1-15: such a dictionary (ACAD_IMAGE_DICT and ACAD_PDFDEFINITIONS in a drawing without images or PDF underlays) was written into every
+	/// saved copy. The DWG writer leaves it out while it is empty, unless the header points at it. Adding an entry clears the mark for good: a
+	/// dictionary that held something may have been written, and a later save that left it out would lose an object of the file.
+	/// </remarks>
+	internal bool MadeByLibrary { get; set; }
+
 	/// <inheritdoc/>
 	public override string ObjectName => DxfFileToken.ObjectDictionary;
 
@@ -227,6 +238,8 @@ public class CadDictionary : NonGraphicalObject, IObservableCadCollection<NonGra
 
 		this._entries.Add(key, value);
 		value.Owner = this;
+		//AirCAD W1-15: once it holds an entry it is written like a dictionary the file held, also when it is emptied again
+		this.MadeByLibrary = false;
 
 		value.OnNameChanged += this.onEntryNameChanged;
 

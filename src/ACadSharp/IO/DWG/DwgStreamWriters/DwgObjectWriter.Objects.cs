@@ -28,6 +28,22 @@ internal partial class DwgObjectWriter : DwgSectionIO
 		return this.skipEntry(entry, out _);
 	}
 
+	/// <summary>
+	/// Whether the header writes a handle to <paramref name="dictionary"/> (DwgHeaderWriter): such a dictionary is written even when the library made it
+	/// and it is empty, so that the header names an object the file holds.
+	/// </summary>
+	private bool pointedByHeader(CadDictionary dictionary)
+	{
+		ulong handle = dictionary.Handle;
+		return handle == this._document.RootDictionary?.Handle
+			|| handle == this._document.Groups?.Handle
+			|| handle == this._document.MLineStyles?.Handle
+			|| handle == this._document.Layouts?.Handle
+			|| handle == this._document.Materials?.Handle
+			|| handle == this._document.Colors?.Handle
+			|| handle == PlotStyleReferences.Dictionary(this._document)?.Handle;
+	}
+
 	private bool skipEntry(NonGraphicalObject entry, out bool notify)
 	{
 		if (!entry.IsValid(CadFileFormat.DWG, this._version))
@@ -44,6 +60,10 @@ internal partial class DwgObjectWriter : DwgSectionIO
 			case BlockRepresentationData when !this.WriteDynamicParameters:
 			case DynamicBlockPurgePreventer when !this.WriteDynamicParameters:
 			case XRecord when !this.WriteXRecords:
+				notify = false;
+				return true;
+			//AirCAD W1-15: an empty dictionary the library made for a collection the file lacked is not written (with nothing attached to it)
+			case CadDictionary { MadeByLibrary: true, XDictionary: null } made when !made.Any() && !made.ExtendedData.Any() && !this.pointedByHeader(made):
 				notify = false;
 				return true;
 			case AecWallStyle:

@@ -37,7 +37,19 @@ public class Solid : Entity, IOrientable
 	public override string ObjectName => DxfFileToken.EntitySolid;
 
 	/// <inheritdoc/>
-	public override ObjectType ObjectType => ObjectType.SOLID;
+	/// <remarks>
+	/// AirCAD W1-10: a TRACE read from a file keeps its type when it is written (<see cref="IsTrace"/>); to everything else it is a SOLID.
+	/// </remarks>
+	public override ObjectType ObjectType => this.IsTrace ? ObjectType.TRACE : ObjectType.SOLID;
+
+	/// <summary>
+	/// Whether the file stored this entity as a TRACE (DWG type 32, DXF <see cref="DxfFileToken.EntityTrace"/>), which has the data of a SOLID.
+	/// </summary>
+	/// <remarks>
+	/// AirCAD W1-10: the library read a TRACE as a SOLID and wrote it as one, so a saved copy turned every TRACE into a SOLID. The writers write
+	/// the type it was read with; <see cref="ObjectName"/> stays SOLID so that a TRACE is handled as the SOLID it draws like.
+	/// </remarks>
+	internal bool IsTrace { get; set; }
 
 	/// <summary>
 	/// Second corner.

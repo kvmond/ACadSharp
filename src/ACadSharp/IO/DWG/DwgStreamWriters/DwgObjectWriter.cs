@@ -345,7 +345,11 @@ internal partial class DwgObjectWriter : DwgSectionIO
 		this._writer.WriteBit(record.Flags.HasFlag(BlockTypeFlags.Anonymous));
 
 		//Hasatts B 1 if block contains attdefs (2 bit)
-		this._writer.WriteBit(record.HasAttributes);
+		//AirCAD W1-9: a layout's block keeps the bit it was read with (AutoCAD leaves it 0 with attribute definitions in model space); one not
+		//read from a DWG takes the DXF flag (0 for a new layout)
+		this._writer.WriteBit(record.Layout != null
+			? record.HasAttributesAsRead ?? record.Flags.HasFlag(BlockTypeFlags.NonConstantAttributeDefinitions)
+			: record.HasAttributes);
 
 		//Blkisxref B 1 if block is xref (4 bit)
 		this._writer.WriteBit(record.Flags.HasFlag(BlockTypeFlags.XRef));

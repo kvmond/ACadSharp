@@ -213,6 +213,10 @@ internal abstract class DxfSectionReaderBase
 			case DxfFileToken.EndSequence:
 				return this.readEntityCodes<Seqend>(new CadEntityTemplate<Seqend>(), this.readEntitySubclassMap);
 			case DxfFileToken.EntityTrace:
+				//AirCAD W1-10: a TRACE is read as a SOLID that is written back as a TRACE
+				var trace = new CadEntityTemplate<Solid>();
+				((Solid)trace.CadObject).IsTrace = true;
+				return this.readEntityCodes<Solid>(trace, this.readModelerGeometry);
 			case DxfFileToken.EntitySolid:
 				return this.readEntityCodes<Solid>(new CadEntityTemplate<Solid>(), this.readModelerGeometry);
 			case DxfFileToken.EntityTable:

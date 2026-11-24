@@ -1074,6 +1074,8 @@ namespace ACadSharp.IO.DWG
 
 			//Hasatts B 1 if block contains attdefs (2 bit)
 			bool hasatts = this._objectReader.ReadBit();
+			//AirCAD W1-9: kept for a layout's block, which AutoCAD leaves 0 with attribute definitions in it
+			record.HasAttributesAsRead = hasatts;
 
 			//Blkisxref B 1 if block is xref (4 bit)
 			if (this._objectReader.ReadBit())
@@ -4300,8 +4302,12 @@ namespace ACadSharp.IO.DWG
 					template = this.readPolylineMesh();
 					break;
 				case ObjectType.SOLID:
+					template = this.readSolid();
+					break;
 				case ObjectType.TRACE:
 					template = this.readSolid();
+					//AirCAD W1-10: written back as a TRACE
+					((Solid)template.CadObject).IsTrace = true;
 					break;
 				case ObjectType.SHAPE:
 					template = this.readShape();
@@ -4805,7 +4811,6 @@ namespace ACadSharp.IO.DWG
 			//75 0 : Splined(75 value is 5)
 			//1 : Splined(75 value is 6)
 			bool splined = ((uint)flags & 0b1) > 0;
-			//Should assign pline.SmoothSurface ??
 
 			//(If either is set, set 70 bit 2(4) to indicate splined.)
 			bool splined1 = ((uint)flags & 0b10) > 0;
@@ -4813,6 +4818,16 @@ namespace ACadSharp.IO.DWG
 			if (splined | splined1)
 			{
 				pline.Flags |= PolylineFlags.SplineFit;
+			}
+
+			//AirCAD W1-11: the curve type (75) the bits name, which the writer writes back
+			if (splined1)
+			{
+				pline.SmoothSurface = SmoothSurfaceType.Cubic;
+			}
+			else if (splined)
+			{
+				pline.SmoothSurface = SmoothSurfaceType.Quadratic;
 			}
 
 			//Flags RC 70 NOT DIRECTLY THE 70. Bit-coded (76543210):
@@ -6369,6 +6384,17 @@ namespace ACadSharp.IO.DWG
 
 			byte flags = this._objectReader.ReadByte();
 			dimension.IsTextUserDefinedLocation = (flags & 0b01) == 0;
+			//AirCAD W1-13: the bits above the two lowest (AutoCAD sets bit 3) are kept as read and written back
+			dimension.OtherFlagBitsAsRead = (byte)(flags & ~0b11);
+			//AirCAD W1-13: bit 1 is the 70's 32, the block used by this dimension only (kept; the writer writes it back)
+			if ((flags & 0b10) != 0)
+			{
+				dimension.Flags |= DimensionType.BlockReference;
+			}
+			else
+			{
+				dimension.Flags &= ~DimensionType.BlockReference;
+			}
 
 			//User text TV 1
 			dimension.Text = this._textReader.ReadVariableText();

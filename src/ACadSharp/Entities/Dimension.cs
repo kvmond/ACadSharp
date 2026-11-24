@@ -140,6 +140,16 @@ public abstract class Dimension : Entity, IOrientable
 	public bool IsAngular { get { return this.Flags.HasFlag(DimensionType.Angular3Point) || this.Flags.HasFlag(DimensionType.Angular); } }
 
 	/// <summary>
+	/// The bits of a DWG's flag byte beyond the two the library models (bit 0: the text in its default position, bit 1: the 70's 32), as read; 0 for a
+	/// dimension not read from a DWG.
+	/// </summary>
+	/// <remarks>
+	/// AirCAD W1-13: AutoCAD sets bit 3 (8) on every dimension the samples hold, which no DXF group shows; the writer wrote only the two lowest bits, so
+	/// a saved copy's dimensions lost it. They are written back as read.
+	/// </remarks>
+	internal byte OtherFlagBitsAsRead { get; set; }
+
+	/// <summary>
 	/// Indicates if the dimension text has been positioned at a user-defined location rather than at the default location.
 	/// </summary>
 	public bool IsTextUserDefinedLocation

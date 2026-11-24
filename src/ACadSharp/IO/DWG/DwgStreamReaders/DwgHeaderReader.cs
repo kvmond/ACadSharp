@@ -746,9 +746,10 @@ namespace ACadSharp.IO.DWG
 				//BS : DIMJUST
 				_header.DimensionTextHorizontalAlignment = (Tables.DimensionTextHorizontalAlignment)(char)_reader.ReadBitShort();
 				//B : DIMSD1
-				_header.DimensionSuppressFirstExtensionLine = _reader.ReadBit();
+				//AirCAD W1-12: the dimension lines' switches; read into the extension lines' they overwrote DIMSE1 and DIMSE2
+				_header.DimensionSuppressFirstDimensionLine = _reader.ReadBit();
 				//B : DIMSD2
-				_header.DimensionSuppressSecondExtensionLine = _reader.ReadBit();
+				_header.DimensionSuppressSecondDimensionLine = _reader.ReadBit();
 				//BS : DIMTOLJ
 				_header.DimensionToleranceAlignment = (Tables.ToleranceAlignment)(char)_reader.ReadBitShort();
 				//BS : DIMTZIN

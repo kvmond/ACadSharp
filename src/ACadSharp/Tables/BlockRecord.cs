@@ -154,6 +154,15 @@ public class BlockRecord : TableEntry, IGeometricEntity
 	}
 
 	/// <summary>
+	/// The "has attribute definitions" bit a DWG stored for this block record (null for one not read from a DWG).
+	/// </summary>
+	/// <remarks>
+	/// AirCAD W1-9: AutoCAD leaves the bit 0 on a layout's block (*Model_Space, *Paper_Space) that holds attribute definitions; the writer computed it
+	/// from the entities and wrote 1, so a saved copy's model space showed DXF 70 = 2. A layout's block is written with the bit it was read with.
+	/// </remarks>
+	internal bool? HasAttributesAsRead { get; set; }
+
+	/// <summary>
 	/// Blocks with the anonymous flag set are managed by this library or the editing software,
 	/// this may affect the entities or the block properties.
 	/// </summary>

@@ -305,7 +305,8 @@ internal abstract class CadDocumentBuilder
 			}
 		}
 
-		this.DocumentToBuild.UpdateCollections(true, false);
+		//AirCAD W1-15: marks the dictionaries made for collections the file lacked
+		this.DocumentToBuild.UpdateCollectionsOfARead();
 	}
 
 	protected void createMissingHandles()

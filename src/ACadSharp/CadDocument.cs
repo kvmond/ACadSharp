@@ -817,6 +817,25 @@ public class CadDocument : IHandledCadObject
 		}
 	}
 
+	/// <summary>
+	/// <see cref="UpdateCollections"/> for a document a reader has built: a dictionary made for a collection the file lacked is marked
+	/// (<see cref="CadDictionary.MadeByLibrary"/>, AirCAD W1-15). A new document's dictionaries are not: it has no file that lacked them.
+	/// </summary>
+	internal void UpdateCollectionsOfARead()
+	{
+		this._markMadeDictionaries = true;
+		try
+		{
+			this.UpdateCollections(true, false);
+		}
+		finally
+		{
+			this._markMadeDictionaries = false;
+		}
+	}
+
+	private bool _markMadeDictionaries;
+
 	private bool updateCollection(string dictName, bool createDictionary, out CadDictionary dictionary)
 	{
 		if (this.RootDictionary.TryGetEntry(dictName, out dictionary))
@@ -825,7 +844,8 @@ public class CadDocument : IHandledCadObject
 		}
 		else if (createDictionary)
 		{
-			dictionary = new CadDictionary(dictName);
+			//AirCAD W1-15: made here, not read; the DWG writer leaves it out while it stays empty
+			dictionary = new CadDictionary(dictName) { MadeByLibrary = this._markMadeDictionaries };
 			this.RootDictionary.Add(dictionary);
 		}
 

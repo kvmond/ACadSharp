@@ -196,7 +196,10 @@ internal partial class DwgObjectWriter : DwgSectionIO
 
 		byte flags = 0;
 		flags |= dimension.IsTextUserDefinedLocation ? (byte)0b00 : (byte)0b01;
-		//flags |= 8;
+		//AirCAD W1-13: the 70's 32, the block used by this dimension only (the library left it out, so a saved copy's dimensions lost it)
+		flags |= dimension.Flags.HasFlag(DimensionType.BlockReference) ? (byte)0b10 : (byte)0b00;
+		//AirCAD W1-13: the bits above the two lowest as read (AutoCAD sets bit 3 on every dimension)
+		flags |= (byte)(dimension.OtherFlagBitsAsRead & ~0b11);
 
 		this._writer.WriteByte(flags);
 
@@ -2092,13 +2095,27 @@ internal partial class DwgObjectWriter : DwgSectionIO
 		this._writer.HandleReference(DwgReferenceType.HardOwnership, pline.Vertices.Seqend);
 	}
 
+	/// <summary>
+	/// The spline flags of a 3D polyline (AirCAD W1-11): bit 0 for a quadratic curve (75 = 5), bit 1 for a cubic one (75 = 6), none for a
+	/// polyline that is not spline-fit. A spline-fit polyline of another curve type is written cubic, AutoCAD's default (SPLINETYPE 6).
+	/// </summary>
+	private static byte splineFlags(Polyline3D pline)
+	{
+		if (!pline.Flags.HasFlag(PolylineFlags.SplineFit))
+		{
+			return 0;
+		}
+
+		return pline.SmoothSurface == SmoothSurfaceType.Quadratic ? (byte)0b1 : (byte)0b10;
+	}
+
 	private void writePolyline3D(Polyline3D pline)
 	{
 		//Flags RC 70 NOT DIRECTLY THE 75. Bit-coded (76543210):
 		//75 0 : Splined(75 value is 5)
 		//1 : Splined(75 value is 6)
-		//Should assign pline.SmoothSurface ??
-		this._writer.WriteByte(0);
+		//AirCAD W1-11: a spline-fit polyline keeps its curve type (the library wrote 0, so a saved copy lost the spline: AutoCAD's 70 bit 4 and 75)
+		this._writer.WriteByte(splineFlags(pline));
 
 		//Flags RC 70 NOT DIRECTLY THE 70. Bit-coded (76543210):
 		//0 : Closed(70 bit 0(1))

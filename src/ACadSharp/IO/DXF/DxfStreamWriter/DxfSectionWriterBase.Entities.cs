@@ -19,7 +19,8 @@ internal abstract partial class DxfSectionWriterBase
 			return;
 		}
 
-		this._writer.Write(DxfCode.Start, entity.ObjectName);
+		//AirCAD W1-10: a TRACE read as a SOLID is written as a TRACE
+		this._writer.Write(DxfCode.Start, entity is Solid { IsTrace: true } ? DxfFileToken.EntityTrace : entity.ObjectName);
 
 		this.writeCommonObjectData(entity);
 
