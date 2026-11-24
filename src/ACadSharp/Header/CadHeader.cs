@@ -3226,6 +3226,42 @@ public class CadHeader
 	/// </remarks>
 	internal bool DIMSAV { get; set; }
 
+	/// <summary>
+	/// AirCAD W1-14: the DWG header's TILEMODELIGHTSYNCH (RC, R2007 and later) as a DWG file held it; null for a new or DXF-read document, which
+	/// the writer writes as before.
+	/// </summary>
+	internal byte? TileModeLightSynchAsRead { get; set; }
+
+	/// <summary>
+	/// AirCAD W1-14: the DWG header's REALWORLDSCALE (the bit between DGNFRAME and INTERFERECOLOR, R2007 and later) as a DWG file held it; null for
+	/// a new or DXF-read document, which the writer writes as before.
+	/// </summary>
+	internal bool? RealWorldScaleAsRead { get; set; }
+
+	/// <summary>
+	/// AirCAD W1-14: the DWG header's INTERSECTIONCOLOR (BS, R2004 and later) as a DWG file held it; null for a new or DXF-read document, which
+	/// the writer writes with <see cref="InterfereColor"/>'s index as before. It is not <see cref="InterfereColor"/> (INTERFERECOLOR, R2007 and later).
+	/// </summary>
+	internal short? IntersectionColorAsRead { get; set; }
+
+	/// <summary>
+	/// AirCAD W1-14: the object the DWG header's CMATERIAL (R2007 and later) named in the file read; the writer writes it while it is still this
+	/// document's object.
+	/// </summary>
+	internal Material CurrentMaterialAsRead { get; set; }
+
+	/// <summary>
+	/// AirCAD W1-14: the dictionary the DWG header's DICTIONARY_PLOTSETTINGS (R2000 and later) named in the file read; the writer writes it while
+	/// it is still this document's object.
+	/// </summary>
+	internal CadDictionary PlotSettingsDictionaryAsRead { get; set; }
+
+	/// <summary>
+	/// AirCAD W1-14: the dictionary the DWG header's DICTIONARY_VISUALSTYLE (R2007 and later) named in the file read; the writer writes it while
+	/// it is still this document's object.
+	/// </summary>
+	internal CadDictionary VisualStyleDictionaryAsRead { get; set; }
+
 	//Create enum for variable
 	private static readonly PropertyExpression<CadHeader, CadSystemVariableAttribute> _propertyCache;
 

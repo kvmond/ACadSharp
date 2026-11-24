@@ -130,6 +130,22 @@ namespace ACadSharp.IO.DWG
 			{
 				header.DimensionBlockNameSecond = record.Name;
 			}
+
+			//AirCAD W1-14: the objects these pointers name, so that the writer writes them back while they stay in the document
+			if (builder.TryGetCadObject(this.CMATERIAL, out Material material))
+			{
+				header.CurrentMaterialAsRead = material;
+			}
+
+			if (builder.TryGetCadObject(this.DICTIONARY_PLOTSETTINGS, out CadDictionary plotSettings))
+			{
+				header.PlotSettingsDictionaryAsRead = plotSettings;
+			}
+
+			if (builder.TryGetCadObject(this.DICTIONARY_VISUALSTYLE, out CadDictionary visualStyles))
+			{
+				header.VisualStyleDictionaryAsRead = visualStyles;
+			}
 		}
 
 		private ulong? getHandle([CallerMemberName] string name = null)

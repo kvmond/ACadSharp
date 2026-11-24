@@ -30,6 +30,23 @@ namespace ACadSharp.IO.DWG
 			this._writer = DwgStreamWriterBase.GetStreamWriter(_version, this._msmain, this._encoding);
 		}
 
+		/// <summary>
+		/// AirCAD W1-14: an object the header named in the file read (<see cref="CadHeader.CurrentMaterialAsRead"/> and the two dictionaries), or null
+		/// when it is no longer one this document writes: it must still be registered under its handle and owned by <paramref name="owner"/>.
+		/// </summary>
+		private CadObject keptAsRead(CadObject value, ulong? owner)
+		{
+			if (value == null || owner is not ulong ownerHandle || ownerHandle == 0
+				|| !ReferenceEquals(value.Document, this._document)
+				|| !this._document.TryGetCadObject(value.Handle, out CadObject registered) || !ReferenceEquals(registered, value)
+				|| value.Owner?.Handle != ownerHandle)
+			{
+				return null;
+			}
+
+			return value;
+		}
+
 		public void Write()
 		{
 			//+R2007 Only:
@@ -369,8 +386,8 @@ namespace ACadSharp.IO.DWG
 			//R2007 + Only:
 			if (this.R2007Plus)
 			{
-				//H: CMATERIAL(hard pointer)
-				this._writer.HandleReference(DwgReferenceType.HardPointer, null);
+				//H: CMATERIAL(hard pointer); AirCAD W1-14: the material the file named while it stays in ACAD_MATERIAL
+				this._writer.HandleReference(DwgReferenceType.HardPointer, this.keptAsRead(this._header.CurrentMaterialAsRead, this._document.Materials?.Handle));
 			}
 
 			//Common:
@@ -830,8 +847,8 @@ namespace ACadSharp.IO.DWG
 
 				//H : DICTIONARY(LAYOUTS)(hard pointer)
 				this._writer.HandleReference(DwgReferenceType.HardPointer, this._document.Layouts);
-				//H: DICTIONARY(PLOTSETTINGS)(hard pointer)
-				this._writer.HandleReference(DwgReferenceType.HardPointer, null);
+				//H: DICTIONARY(PLOTSETTINGS)(hard pointer); AirCAD W1-14: the dictionary the file named while it stays in the root dictionary
+				this._writer.HandleReference(DwgReferenceType.HardPointer, this.keptAsRead(this._header.PlotSettingsDictionaryAsRead, this._document.RootDictionary?.Handle));
 				//H: DICTIONARY(PLOTSTYLES)(hard pointer)
 				this._writer.HandleReference(DwgReferenceType.HardPointer, ACadSharp.Objects.PlotStyleReferences.Dictionary(this._document));
 			}
@@ -848,13 +865,13 @@ namespace ACadSharp.IO.DWG
 			//R2007 +:
 			if (this.R2007Plus)
 			{
-				//H: DICTIONARY(VISUALSTYLE)(hard pointer)
-				this._writer.HandleReference(DwgReferenceType.HardPointer, null);
+				//H: DICTIONARY(VISUALSTYLE)(hard pointer); AirCAD W1-14: the dictionary the file named while it stays in the root dictionary
+				this._writer.HandleReference(DwgReferenceType.HardPointer, this.keptAsRead(this._header.VisualStyleDictionaryAsRead, this._document.RootDictionary?.Handle));
 
 				//R2013+:
 				if (this.R2013Plus)
 				{
-					//H : UNKNOWN (hard pointer)	//DICTIONARY_VISUALSTYLE
+					//H : UNKNOWN (hard pointer)
 					this._writer.HandleReference(DwgReferenceType.HardPointer, null);
 				}
 			}
@@ -934,8 +951,8 @@ namespace ACadSharp.IO.DWG
 				this._writer.WriteByte(this._header.HaloGapPercentage);
 				//BS : OBSCUREDCOLOR
 				this._writer.WriteBitShort(this._header.ObscuredColor.Index);
-				//BS : INTERSECTIONCOLOR
-				this._writer.WriteBitShort(this._header.InterfereColor.Index);
+				//BS : INTERSECTIONCOLOR (AirCAD W1-14: as the file held it; otherwise as before)
+				this._writer.WriteBitShort(this._header.IntersectionColorAsRead ?? this._header.InterfereColor.Index);
 				//RC : OBSCUREDLTYPE
 				this._writer.WriteByte(this._header.ObscuredType);
 				//RC: INTERSECTIONDISPLAY
@@ -1010,15 +1027,15 @@ namespace ACadSharp.IO.DWG
 				this._writer.WriteBitLong(this._header.TimeZone);
 				//RC : LIGHTGLYPHDISPLAY
 				this._writer.WriteByte((byte)this._header.DisplayLightGlyphs);
-				//RC : TILEMODELIGHTSYNCH	??
-				this._writer.WriteByte((byte)'0');
+				//RC : TILEMODELIGHTSYNCH (AirCAD W1-14: as the file held it; otherwise as before)
+				this._writer.WriteByte(this._header.TileModeLightSynchAsRead ?? (byte)'0');
 				//RC : DWFFRAME
 				this._writer.WriteByte((byte)this._header.DwgUnderlayFramesVisibility);
 				//RC : DGNFRAME
 				this._writer.WriteByte((byte)this._header.DgnUnderlayFramesVisibility);
 
-				//B : unknown
-				this._writer.WriteBit(false);
+				//B : REALWORLDSCALE (AirCAD W1-14: as the file held it; otherwise as before)
+				this._writer.WriteBit(this._header.RealWorldScaleAsRead ?? false);
 
 				//CMC : INTERFERECOLOR
 				this._writer.WriteCmColor(this._header.InterfereColor);

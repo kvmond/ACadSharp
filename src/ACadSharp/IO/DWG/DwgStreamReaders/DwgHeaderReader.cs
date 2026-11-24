@@ -894,8 +894,8 @@ namespace ACadSharp.IO.DWG
 
 				//R2013+:
 				if (this.R2013Plus)
-					//H : UNKNOWN (hard pointer)
-					objectPointers.DICTIONARY_VISUALSTYLE = _reader.HandleReference();
+					//H : UNKNOWN (hard pointer); AirCAD W1-14: read apart, it no longer replaces DICTIONARY_VISUALSTYLE (the writer writes it null)
+					_reader.HandleReference();
 			}
 
 			//R2000 +:
@@ -954,8 +954,9 @@ namespace ACadSharp.IO.DWG
 				_header.HaloGapPercentage = _reader.ReadByte();
 				//BS : OBSCUREDCOLOR
 				_header.ObscuredColor = new Color(_reader.ReadBitShort());
-				//BS : INTERSECTIONCOLOR
-				_header.InterfereColor = new Color(_reader.ReadBitShort());
+				//BS : INTERSECTIONCOLOR (AirCAD W1-14: kept as read and apart from INTERFERECOLOR, a variable of its own that R2007 and later hold
+				//as a CMC; read into InterfereColor, it made an R2007+ drawing saved as R2004 come back with INTERFERECOLOR 257)
+				_header.IntersectionColorAsRead = _reader.ReadBitShort();
 				//RC : OBSCUREDLTYPE
 				_header.ObscuredType = _reader.ReadByte();
 				//RC: INTERSECTIONDISPLAY
@@ -1034,15 +1035,15 @@ namespace ACadSharp.IO.DWG
 				_header.TimeZone = _reader.ReadBitLong();
 				//RC : LIGHTGLYPHDISPLAY
 				_header.DisplayLightGlyphs = _reader.ReadRawChar();
-				//RC : TILEMODELIGHTSYNCH	??
-				_reader.ReadRawChar();
+				//RC : TILEMODELIGHTSYNCH (AirCAD W1-14: kept as read)
+				_header.TileModeLightSynchAsRead = _reader.ReadByte();
 				//RC : DWFFRAME
 				_header.DwgUnderlayFramesVisibility = _reader.ReadRawChar();
 				//RC : DGNFRAME
 				_header.DgnUnderlayFramesVisibility = _reader.ReadRawChar();
 
-				//B : unknown
-				_reader.ReadBit();
+				//B : REALWORLDSCALE (AirCAD W1-14: kept as read; DXF group 290 between DGNFRAME and INTERFERECOLOR)
+				_header.RealWorldScaleAsRead = _reader.ReadBit();
 
 				//CMC : INTERFERECOLOR
 				_header.InterfereColor = _reader.ReadCmColor();
