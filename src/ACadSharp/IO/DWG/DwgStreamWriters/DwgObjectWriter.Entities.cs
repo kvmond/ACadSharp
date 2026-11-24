@@ -982,15 +982,9 @@ internal partial class DwgObjectWriter : DwgSectionIO
 
 	private void writeInsert(Insert insert)
 	{
+		// The common data writes a MINSERT's columns, rows and spacings (Air CAD W1-18: they were written a second time here, which left
+		// 152 bits beyond the object's data that a reader reading to the handles' position does not see).
 		this.writeCommonInsertData(insert);
-
-		if (insert.IsMultiple)
-		{
-			this._writer.WriteBitShort((short)insert.ColumnCount);
-			this._writer.WriteBitShort((short)insert.RowCount);
-			this._writer.WriteBitDouble(insert.ColumnSpacing);
-			this._writer.WriteBitDouble(insert.RowSpacing);
-		}
 	}
 
 	private void writeLeader(Leader leader)
