@@ -150,6 +150,31 @@ public abstract class Dimension : Entity, IOrientable
 	internal byte OtherFlagBitsAsRead { get; set; }
 
 	/// <summary>
+	/// AirCAD W1-17: the actual measurement (DXF 42) a DWG file stored; null for a dimension not read from a DWG.
+	/// </summary>
+	/// <remarks>
+	/// The reader dropped it and the writer wrote <see cref="Measurement"/> computed again, which differs in the last digits (AutoCAD's dump of a
+	/// copy: 0.7853981633974483 became 0.7853981633974484). <see cref="MeasurementToWrite"/> keeps the stored value while the geometry still gives it.
+	/// </remarks>
+	internal double? MeasurementAsRead { get; set; }
+
+	/// <summary>
+	/// AirCAD W1-17: the measurement a writer stores: the one read while <see cref="Measurement"/> computed from the geometry agrees with it to the
+	/// rounding of the computation (a relative 1e-9), otherwise the computed one (the dimension was changed, or the file held another value).
+	/// </summary>
+	internal double MeasurementToWrite()
+	{
+		double computed = this.Measurement;
+		if (this.MeasurementAsRead is double read && !double.IsNaN(read) && !double.IsNaN(computed)
+			&& Math.Abs(read - computed) <= 1e-9 * Math.Max(1.0, Math.Max(Math.Abs(read), Math.Abs(computed))))
+		{
+			return read;
+		}
+
+		return computed;
+	}
+
+	/// <summary>
 	/// Indicates if the dimension text has been positioned at a user-defined location rather than at the default location.
 	/// </summary>
 	public bool IsTextUserDefinedLocation

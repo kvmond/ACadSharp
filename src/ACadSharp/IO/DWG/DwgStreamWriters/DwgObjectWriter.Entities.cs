@@ -228,8 +228,8 @@ internal partial class DwgObjectWriter : DwgSectionIO
 			this._writer.WriteBitShort((short)dimension.LineSpacingStyle);
 			//Linespacing Factor BD 41
 			this._writer.WriteBitDouble(dimension.LineSpacingFactor);
-			//Actual Measurement BD 42
-			this._writer.WriteBitDouble(dimension.Measurement);
+			//Actual Measurement BD 42 (AirCAD W1-17: as read while the geometry still gives it)
+			this._writer.WriteBitDouble(dimension.MeasurementToWrite());
 		}
 
 		//R2007 +:

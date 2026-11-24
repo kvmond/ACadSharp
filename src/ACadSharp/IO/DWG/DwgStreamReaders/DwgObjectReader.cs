@@ -6425,8 +6425,8 @@ namespace ACadSharp.IO.DWG
 				dimension.LineSpacingStyle = (LineSpacingStyleType)this._objectReader.ReadBitShort();
 				//Linespacing Factor BD 41
 				dimension.LineSpacingFactor = this._objectReader.ReadBitDouble();
-				//Actual Measurement BD 42
-				this._objectReader.ReadBitDouble();
+				//Actual Measurement BD 42 (AirCAD W1-17: kept as read)
+				dimension.MeasurementAsRead = this._objectReader.ReadBitDouble();
 			}
 
 			//R2007 +:
