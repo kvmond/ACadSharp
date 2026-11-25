@@ -6692,15 +6692,17 @@ namespace ACadSharp.IO.DWG
 			if (this.R2007Plus)
 			{
 				//Use default lights B ? Default value is true
-				this._mergedReaders.ReadBit();
+				bool useDefaultLights = this._mergedReaders.ReadBit();
 				//Default lighting RC ? Default value is 1
-				this._mergedReaders.ReadByte();
+				byte defaultLighting = this._mergedReaders.ReadByte();
 				//Brightness BD ? Default value is 0
-				this._mergedReaders.ReadBitDouble();
+				double brightness = this._mergedReaders.ReadBitDouble();
 				//Contrast BD ? Default value is 0
-				this._mergedReaders.ReadBitDouble();
+				double contrast = this._mergedReaders.ReadBitDouble();
 				//Abient color CMC? Default value is indexed color 250
-				this._mergedReaders.ReadCmColor();
+				Color ambient = this._mergedReaders.ReadCmColor(out CmColorNames ambientNames);
+				//AirCAD W1-21: kept and written back
+				view.LightingAsRead = (useDefaultLights, defaultLighting, brightness, contrast, ambient, ambientNames);
 			}
 
 			//Common:

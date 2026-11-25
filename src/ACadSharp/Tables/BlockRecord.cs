@@ -163,6 +163,12 @@ public class BlockRecord : TableEntry, IGeometricEntity
 	internal bool? HasAttributesAsRead { get; set; }
 
 	/// <summary>
+	/// The handles of the block's inserts in the order the file listed them (Air CAD W1-21). The writer lists the inserts in this order, the ones
+	/// the file did not list after them in handle order: AutoCAD keeps a list in the order it stored it and its dump shows that order.
+	/// </summary>
+	internal List<ulong> InsertOrderAsRead { get; set; } = new();
+
+	/// <summary>
 	/// Blocks with the anonymous flag set are managed by this library or the editing software,
 	/// this may affect the entities or the block properties.
 	/// </summary>
@@ -396,6 +402,8 @@ public class BlockRecord : TableEntry, IGeometricEntity
 		BlockRecord clone = (BlockRecord)base.Clone();
 
 		clone.Layout = null;
+		//AirCAD W1-21: the clone's inserts are new objects
+		clone.InsertOrderAsRead = new List<ulong>();
 
 		if (this.SortEntitiesTable != null)
 		{

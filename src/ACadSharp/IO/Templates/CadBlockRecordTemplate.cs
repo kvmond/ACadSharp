@@ -68,6 +68,9 @@ internal class CadBlockRecordTemplate : CadTableEntryTemplate<BlockRecord>, ICad
 	{
 		base.build(builder);
 
+		//AirCAD W1-21: the order the file listed the inserts in
+		this.CadObject.InsertOrderAsRead = new List<ulong>(this.InsertHandles);
+
 		if (this.PreviewBytes.Count > 0)
 		{
 			this.CadObject.Preview = this.PreviewBytes.ToArray();

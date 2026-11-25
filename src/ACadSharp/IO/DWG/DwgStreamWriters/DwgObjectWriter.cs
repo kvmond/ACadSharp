@@ -41,6 +41,27 @@ internal partial class DwgObjectWriter : DwgSectionIO
 		this._insertsByBlockName ??= this._document.BlockRecords.SelectMany(r => r.Entities).OfType<Insert>().Where(this.writes)
 			.OrderBy(i => i.Handle).ToLookup(i => i.Block?.Name);
 
+	/// <summary>
+	/// A block's inserts in the order the file listed them, then the ones it did not list in handle order (Air CAD W1-21: AutoCAD's dump of a copy
+	/// showed S18E-TEMPLATE's three inserts of S18-TITLE in handle order where the original listed them in another).
+	/// </summary>
+	private IEnumerable<Insert> insertsOf(BlockRecord record)
+	{
+		var inserts = this.InsertsByBlockName[record.Name];
+		if (record.InsertOrderAsRead.Count == 0)
+		{
+			return inserts;
+		}
+
+		var place = new Dictionary<ulong, int>();
+		for (int i = 0; i < record.InsertOrderAsRead.Count; i++)
+		{
+			place.TryAdd(record.InsertOrderAsRead[i], i);
+		}
+
+		return inserts.OrderBy(i => place.TryGetValue(i.Handle, out int at) ? at : int.MaxValue).ThenBy(i => i.Handle);
+	}
+
 	private readonly Dictionary<BlockRecord, Entity[]> _blockCompatibleEntities = new();
 
 	private CadDocument _document;
@@ -384,7 +405,7 @@ internal partial class DwgObjectWriter : DwgSectionIO
 		if (this.R2000Plus)
 		{
 			//Insert Count RC A sequence of zero or more non-zero RC’s, followed by a terminating 0 RC.The total number of these indicates how many insert handles will be present.
-			foreach (var item in this.InsertsByBlockName[record.Name])
+			foreach (var item in this.insertsOf(record))
 			{
 				this._writer.WriteByte(1);
 			}
@@ -453,7 +474,7 @@ internal partial class DwgObjectWriter : DwgSectionIO
 		//R2000+:
 		if (this.R2000Plus)
 		{
-			foreach (var item in this.InsertsByBlockName[record.Name])
+			foreach (var item in this.insertsOf(record))
 			{
 				this._writer.HandleReference(DwgReferenceType.SoftPointer, item);
 			}
@@ -1611,16 +1632,18 @@ internal partial class DwgObjectWriter : DwgSectionIO
 		//R2007+:
 		if (this.R2007Plus)
 		{
+			//AirCAD W1-21: the lighting as read, else AutoCAD's defaults
+			var lighting = view.LightingAsRead ?? (true, (byte)1, 0.0, 0.0, new Color(250), null);
 			//Use default lights B ? Default value is true
-			this._writer.WriteBit(true);
+			this._writer.WriteBit(lighting.UseDefaultLights);
 			//Default lighting RC ? Default value is 1
-			this._writer.WriteByte(1);
+			this._writer.WriteByte(lighting.DefaultLighting);
 			//Brightness BD ? Default value is 0
-			this._writer.WriteBitDouble(0.0);
+			this._writer.WriteBitDouble(lighting.Brightness);
 			//Contrast BD ? Default value is 0
-			this._writer.WriteBitDouble(0.0);
+			this._writer.WriteBitDouble(lighting.Contrast);
 			//Abient color CMC? Default value is indexed color 250
-			this._writer.WriteCmColor(new Color(250));
+			this._writer.WriteCmColor(lighting.AmbientColor, lighting.AmbientNames);
 		}
 
 		//Common:

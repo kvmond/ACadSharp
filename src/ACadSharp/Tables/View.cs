@@ -109,6 +109,13 @@ namespace ACadSharp.Tables
 		public VisualStyle VisualStyle { get; set; }
 
 		/// <summary>
+		/// The lighting a DWG file of R2007 or later stored for the view (Air CAD W1-21): whether the default lights are on, the default lighting
+		/// type, the brightness, the contrast and the ambient colour with its names. The reader dropped them and the writer wrote AutoCAD's defaults,
+		/// so an ambient colour stored as the true colour 51,51,51 came back as the index colour 250. Null: the defaults are written.
+		/// </summary>
+		internal (bool UseDefaultLights, byte DefaultLighting, double Brightness, double Contrast, Color AmbientColor, CmColorNames AmbientNames)? LightingAsRead { get; set; }
+
+		/// <summary>
 		/// UCS origin
 		/// </summary>
 		[DxfCodeValue(110, 120, 130)]
