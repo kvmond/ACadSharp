@@ -131,6 +131,22 @@ namespace ACadSharp.IO.DWG
 				header.DimensionBlockNameSecond = record.Name;
 			}
 
+			//AirCAD DS3: the dimension line types, written back while they stay in the line type table
+			if (builder.TryGetCadObject(this.DIMLTYPE, out LineType lineType))
+			{
+				header.DimensionLineTypeAsRead = lineType;
+			}
+
+			if (builder.TryGetCadObject(this.DIMLTEX1, out lineType))
+			{
+				header.DimensionTex1AsRead = lineType;
+			}
+
+			if (builder.TryGetCadObject(this.DIMLTEX2, out lineType))
+			{
+				header.DimensionTex2AsRead = lineType;
+			}
+
 			//AirCAD W1-14: the objects these pointers name, so that the writer writes them back while they stay in the document
 			if (builder.TryGetCadObject(this.CMATERIAL, out Material material))
 			{

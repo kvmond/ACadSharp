@@ -1,4 +1,5 @@
 ﻿using ACadSharp.Header;
+using ACadSharp.Tables;
 using CSUtilities.IO;
 using System.IO;
 using System.Text;
@@ -45,6 +46,21 @@ namespace ACadSharp.IO.DWG
 			}
 
 			return value;
+		}
+
+		/// <summary>
+		/// AirCAD DS3: the block record of this document named <paramref name="name"/>, which the header's arrow names (DIMLDRBLK, DIMBLK, DIMBLK1,
+		/// DIMBLK2) come from when a DWG file is read; null for an empty name (the default arrow) or one no block of this document has.
+		/// </summary>
+		private BlockRecord arrowBlock(string name)
+		{
+			if (string.IsNullOrEmpty(name) || this._document.BlockRecords == null
+				|| !this._document.BlockRecords.TryGetValue(name, out BlockRecord record) || record.Handle == 0)
+			{
+				return null;
+			}
+
+			return record;
 		}
 
 		public void Write()
@@ -767,25 +783,25 @@ namespace ACadSharp.IO.DWG
 			{
 				//H: DIMTXSTY(hard pointer)
 				this._writer.HandleReference(DwgReferenceType.HardPointer, this._header.DimensionTextStyle);
-				//H: DIMLDRBLK(hard pointer)
-				this._writer.HandleReference(DwgReferenceType.HardPointer, null);
+				//H: DIMLDRBLK(hard pointer); AirCAD DS3: the block the header names (it was written null, and the arrow lost)
+				this._writer.HandleReference(DwgReferenceType.HardPointer, this.arrowBlock(this._header.ArrowBlockName));
 				//H: DIMBLK(hard pointer)
-				this._writer.HandleReference(DwgReferenceType.HardPointer, null);
+				this._writer.HandleReference(DwgReferenceType.HardPointer, this.arrowBlock(this._header.DimensionBlockName));
 				//H: DIMBLK1(hard pointer)
-				this._writer.HandleReference(DwgReferenceType.HardPointer, null);
+				this._writer.HandleReference(DwgReferenceType.HardPointer, this.arrowBlock(this._header.DimensionBlockNameFirst));
 				//H: DIMBLK2(hard pointer)
-				this._writer.HandleReference(DwgReferenceType.HardPointer, null);
+				this._writer.HandleReference(DwgReferenceType.HardPointer, this.arrowBlock(this._header.DimensionBlockNameSecond));
 			}
 
 			//R2007+ Only:
 			if (this.R2007Plus)
 			{
-				//H : DIMLTYPE (hard pointer)
-				this._writer.HandleReference(DwgReferenceType.HardPointer, null);
+				//H : DIMLTYPE (hard pointer); AirCAD DS3: the line types the file named while they stay in the line type table
+				this._writer.HandleReference(DwgReferenceType.HardPointer, this.keptAsRead(this._header.DimensionLineTypeAsRead, this._document.LineTypes?.Handle));
 				//H: DIMLTEX1(hard pointer)
-				this._writer.HandleReference(DwgReferenceType.HardPointer, null);
+				this._writer.HandleReference(DwgReferenceType.HardPointer, this.keptAsRead(this._header.DimensionTex1AsRead, this._document.LineTypes?.Handle));
 				//H: DIMLTEX2(hard pointer)
-				this._writer.HandleReference(DwgReferenceType.HardPointer, null);
+				this._writer.HandleReference(DwgReferenceType.HardPointer, this.keptAsRead(this._header.DimensionTex2AsRead, this._document.LineTypes?.Handle));
 			}
 
 			//R2000+ Only:

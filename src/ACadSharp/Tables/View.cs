@@ -151,6 +151,14 @@ namespace ACadSharp.Tables
 
 		//334	Soft-pointer ID/handle to live section object (optional)
 
+		/// <summary>
+		/// AirCAD W1-23: the named UCS (DXF 345) a DWG file stored for the view, while it stays this document's UCS; the writer wrote it null.
+		/// </summary>
+		internal UCS NamedUcsAsRead { get; set; }
+
+		/// <summary>AirCAD W1-23: the base UCS (DXF 346) a DWG file stored for the view; see <see cref="NamedUcsAsRead"/>.</summary>
+		internal UCS BaseUcsAsRead { get; set; }
+
 		//345	ID/handle of AcDbUCSTableRecord if UCS is a named UCS.If not present, then UCS is unnamed(appears only if code 72 is set to 1)
 
 		//346	ID/handle of AcDbUCSTableRecord of base UCS if UCS is orthographic(79 code is non-zero). If not present and 79 code is non-zero, then base UCS is taken to be WORLD(appears only if code 72 is set to 1)

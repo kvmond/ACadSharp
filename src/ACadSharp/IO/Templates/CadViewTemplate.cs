@@ -18,7 +18,16 @@ namespace ACadSharp.IO.Templates
 		{
 			base.build(builder);
 
-			//TODO: assing ucs for view
+			//AirCAD W1-23: the UCSs the file named, written back while they stay in the UCS table
+			if (builder.TryGetCadObject(this.NamedUcsHandle, out UCS named))
+			{
+				this.CadObject.NamedUcsAsRead = named;
+			}
+
+			if (builder.TryGetCadObject(this.UcsHandle, out UCS baseUcs))
+			{
+				this.CadObject.BaseUcsAsRead = baseUcs;
+			}
 		}
 	}
 }

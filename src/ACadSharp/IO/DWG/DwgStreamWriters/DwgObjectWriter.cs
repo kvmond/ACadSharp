@@ -1538,6 +1538,10 @@ internal partial class DwgObjectWriter : DwgSectionIO
 		this.registerObject(style);
 	}
 
+	/// <summary>AirCAD W1-23: <paramref name="ucs"/> while it is an entry of this document's UCS table, otherwise null.</summary>
+	private UCS ucsKept(UCS ucs) =>
+		ucs != null && ReferenceEquals(ucs.Document, this._document) && ReferenceEquals(ucs.Owner, this._document.UCSs) && ucs.Handle != 0 ? ucs : null;
+
 	private void writeUCS(UCS ucs)
 	{
 		this.writeCommonNonEntityData(ucs);
@@ -1688,11 +1692,11 @@ internal partial class DwgObjectWriter : DwgSectionIO
 
 		if (this.R2000Plus && view.IsUcsAssociated)
 		{
-			//TODO: Implement ucs reference for view
+			//AirCAD W1-23: the UCSs as read while they stay in this document's UCS table (they were written null)
 			//Base UCS Handle H 346 hard pointer
-			this._writer.HandleReference(DwgReferenceType.HardPointer, 0);
+			this._writer.HandleReference(DwgReferenceType.HardPointer, this.ucsKept(view.BaseUcsAsRead));
 			//Named UCS Handle H 345 hard pointer
-			this._writer.HandleReference(DwgReferenceType.HardPointer, 0);
+			this._writer.HandleReference(DwgReferenceType.HardPointer, this.ucsKept(view.NamedUcsAsRead));
 		}
 
 		//R2007+:

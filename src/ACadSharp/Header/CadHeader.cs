@@ -3262,6 +3262,18 @@ public class CadHeader
 	/// </summary>
 	internal CadDictionary VisualStyleDictionaryAsRead { get; set; }
 
+	/// <summary>
+	/// AirCAD DS3: the line type the DWG header's DIMLTYPE (R2007 and later) named in the file read; the writer writes it while it is still this
+	/// document's line type (it was written null). <see cref="DimensionLineType"/> is not read from a DWG file.
+	/// </summary>
+	internal LineType DimensionLineTypeAsRead { get; set; }
+
+	/// <summary>AirCAD DS3: the line type of the DWG header's DIMLTEX1 (R2007 and later) as read; see <see cref="DimensionLineTypeAsRead"/>.</summary>
+	internal LineType DimensionTex1AsRead { get; set; }
+
+	/// <summary>AirCAD DS3: the line type of the DWG header's DIMLTEX2 (R2007 and later) as read; see <see cref="DimensionLineTypeAsRead"/>.</summary>
+	internal LineType DimensionTex2AsRead { get; set; }
+
 	//Create enum for variable
 	private static readonly PropertyExpression<CadHeader, CadSystemVariableAttribute> _propertyCache;
 
