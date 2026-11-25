@@ -3648,11 +3648,13 @@ namespace ACadSharp.IO.DWG
 			//Drawing dir BS 72 Left to right, etc.; see DXF doc
 			mtext.DrawingDirection = (DrawingDirectionType)this._objectReader.ReadBitShort();
 			//Extents ht BD ---Undocumented and not present in DXF or entget
-			this._objectReader.ReadBitDouble();
+			double extentsHeight = this._objectReader.ReadBitDouble();
 			//Extents wid BD ---Undocumented and not present in DXF or entget
-			this._objectReader.ReadBitDouble();
+			double extentsWidth = this._objectReader.ReadBitDouble();
 			//Text TV 1 All text in one long string
 			mtext.Value = this._textReader.ReadVariableText();
+			//AirCAD W1-20: the extents are kept for the text and height read
+			mtext.ExtentsAsRead = (extentsHeight, extentsWidth, mtext.Value, mtext.Height);
 
 			//H 7 STYLE (hard pointer)
 			template.StyleHandle = this.handleReference();
@@ -3721,10 +3723,10 @@ namespace ACadSharp.IO.DWG
 				this._objectReader.ReadBitDouble();
 				//Rect height BD 41
 				this._objectReader.ReadBitDouble();
-				//Extents width BD 42
-				this._objectReader.ReadBitDouble();
+				//Extents width BD 42 (AirCAD W1-20: kept, as the DXF reader keeps 42 and 43)
+				mtext.HorizontalWidth = this._objectReader.ReadBitDouble();
 				//Extents height BD 43
-				this._objectReader.ReadBitDouble();
+				mtext.VerticalHeight = this._objectReader.ReadBitDouble();
 				//END REDUNDANT FIELDS
 
 				//Column type BS 71 0 = No columns, 1 = static columns, 2 = dynamic columns

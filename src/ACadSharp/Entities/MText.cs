@@ -202,6 +202,17 @@ public partial class MText : Entity, IText
 	[DxfCodeValue(DxfReferenceType.Ignored, 43)]
 	public double VerticalHeight { get; set; } = 0.2;
 
+	/// <summary>
+	/// The extents a DWG file stored for the text (not in DXF), with the text and height they were stored for (Air CAD W1-20). The writer writes them
+	/// back while the text and height are still those; otherwise 0 as before. AutoCAD computes an MTEXT's extents again, but an attribute
+	/// definition's embedded text shows what the file holds.
+	/// </summary>
+	internal (double Height, double Width, string Text, double TextHeight)? ExtentsAsRead { get; set; }
+
+	/// <summary>The extents to write: those read while the text and its height are unchanged, else 0 (Air CAD W1-20).</summary>
+	internal (double Height, double Width) ExtentsToWrite() =>
+		this.ExtentsAsRead is { } read && read.Text == this.Value && read.TextHeight == this.Height ? (read.Height, read.Width) : (0, 0);
+
 	private TextStyle _style = TextStyle.Default;
 
 	/// <inheritdoc/>

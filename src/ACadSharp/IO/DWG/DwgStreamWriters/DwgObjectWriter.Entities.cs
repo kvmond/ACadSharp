@@ -1493,10 +1493,11 @@ internal partial class DwgObjectWriter : DwgSectionIO
 		//Drawing dir BS 72 Left to right, etc.; see DXF doc
 		this._writer.WriteBitShort((short)mtext.DrawingDirection);
 
-		//Extents ht BD ---Undocumented and not present in DXF or entget
-		this._writer.WriteBitDouble(0);
+		//Extents ht BD ---Undocumented and not present in DXF or entget (AirCAD W1-20: as read while the text is unchanged)
+		var extents = mtext.ExtentsToWrite();
+		this._writer.WriteBitDouble(extents.Height);
 		//Extents wid BD ---Undocumented and not present in DXF or entget
-		this._writer.WriteBitDouble(0);
+		this._writer.WriteBitDouble(extents.Width);
 
 		//Text TV 1 All text in one long string
 		this._writer.WriteVariableText(mtext.Value);
