@@ -165,13 +165,18 @@ public abstract class Dimension : Entity, IOrientable
 	internal double MeasurementToWrite()
 	{
 		double computed = this.Measurement;
+		// AirCAD W1-24: AutoCAD stores a linear dimension's measurement scaled by its style's DIMLFAC (P2-DIMVARS: 100 long, DIMLFAC 1.3, 42 = 130), so the
+		// value read is kept while it agrees with the geometry either way.
+		double factor = this.IsAngular ? 1.0 : this.Style?.LinearScaleFactor ?? 1.0;
 		if (this.MeasurementAsRead is double read && !double.IsNaN(read) && !double.IsNaN(computed)
-			&& Math.Abs(read - computed) <= 1e-9 * Math.Max(1.0, Math.Max(Math.Abs(read), Math.Abs(computed))))
+			&& (agrees(read, computed) || (factor != 1.0 && !double.IsNaN(factor) && agrees(read, computed * factor))))
 		{
 			return read;
 		}
 
 		return computed;
+
+		static bool agrees(double a, double b) => Math.Abs(a - b) <= 1e-9 * Math.Max(1.0, Math.Max(Math.Abs(a), Math.Abs(b)));
 	}
 
 	/// <summary>

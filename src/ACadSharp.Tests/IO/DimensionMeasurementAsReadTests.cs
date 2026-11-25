@@ -51,6 +51,28 @@ public class DimensionMeasurementAsReadTests
 		Assert.Equal(10, moved.MeasurementAsRead.Value, 9);
 	}
 
+	/// <summary>Air CAD W1-24: AutoCAD stores a linear dimension's measurement scaled by its style's DIMLFAC; that value is kept while the geometry gives it.</summary>
+	[Theory]
+	[MemberData(nameof(Versions))]
+	public void AMeasurementScaledByTheStylesLinearFactorIsKept(ACadVersion version)
+	{
+		var document = new CadDocument();
+		document.Header.Version = version;
+		var style = new ACadSharp.Tables.DimensionStyle("W1_24") { LinearScaleFactor = 1.3 };
+		document.DimensionStyles.Add(style);
+		var dimension = new DimensionAligned(new XYZ(0, 0, 0), new XYZ(100, 0, 0)) { Style = style };
+		document.Entities.Add(dimension);
+		dimension.MeasurementAsRead = 130;
+		Assert.Equal(130, dimension.MeasurementToWrite());
+
+		var read = Read(Write(document)).Entities.OfType<DimensionAligned>().Single();
+		Assert.Equal(130, read.MeasurementAsRead);
+
+		// A value that is neither the geometry nor the geometry scaled gives way to the computed one, as before.
+		dimension.MeasurementAsRead = 120;
+		Assert.Equal(100, dimension.MeasurementToWrite(), 9);
+	}
+
 	[Theory]
 	[InlineData("AC1018")]
 	[InlineData("AC1024")]
