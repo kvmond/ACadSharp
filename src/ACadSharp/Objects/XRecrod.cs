@@ -37,6 +37,12 @@ public partial class XRecord : NonGraphicalObject
 
 	private List<Entry> _entries = new List<Entry>();
 
+	/// <summary>
+	/// Where a DWG file before R2007 held the code that stands for the 64-bit items (Air CAD W1-19): the number of entries before each one, in reading
+	/// order. Those items are in the ACAD extended data; the writer puts the code back at the same places when it writes a version before R2007.
+	/// </summary>
+	internal List<int> Int64Placeholders { get; private set; } = new List<int>();
+
 	/// <inheritdoc/>
 	public XRecord() : base()
 	{
@@ -53,6 +59,7 @@ public partial class XRecord : NonGraphicalObject
 	public void Clear()
 	{
 		this._entries.Clear();
+		this.Int64Placeholders.Clear();
 	}
 
 	/// <inheritdoc/>
@@ -61,6 +68,7 @@ public partial class XRecord : NonGraphicalObject
 		XRecord clone = (XRecord)base.Clone();
 
 		clone._entries = new List<Entry>();
+		clone.Int64Placeholders = new List<int>(this.Int64Placeholders);
 		foreach (var item in this._entries)
 		{
 			clone._entries.Add(new Entry(item.Code, item.Value, clone));

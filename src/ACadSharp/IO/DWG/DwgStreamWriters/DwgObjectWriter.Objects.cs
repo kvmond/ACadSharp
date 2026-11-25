@@ -2450,15 +2450,28 @@ internal partial class DwgObjectWriter : DwgSectionIO
 		StreamIO ms = new StreamIO(stream);
 		ms.EndianConverter = new LittleEndianConverter();
 
+		int index = 0;
+		int placeholder = 0;
+		void writePlaceholders(int before)
+		{
+			//Before R2007 the code that stands for the 64-bit items goes back where it was read (Air CAD W1-19)
+			while (this.R2007Pre && placeholder < xrecord.Int64Placeholders.Count && xrecord.Int64Placeholders[placeholder] <= before)
+			{
+				ms.Write<short, LittleEndianConverter>(DwgXRecordItems.Int64Placeholder);
+				placeholder++;
+			}
+		}
+
 		foreach (XRecord.Entry entry in xrecord.Entries)
 		{
+			writePlaceholders(index++);
 			if (entry.Value == null)
 			{
 				continue;
 			}
 
 			ms.Write<short, LittleEndianConverter>((short)entry.Code);
-			GroupCodeValueType groupValueType = GroupCodeValue.TransformValue(entry.Code);
+			GroupCodeValueType groupValueType = DwgXRecordItems.TypeOf(entry.Code);
 
 			switch (groupValueType)
 			{
@@ -2479,11 +2492,13 @@ internal partial class DwgObjectWriter : DwgSectionIO
 					break;
 				case GroupCodeValueType.Double:
 				case GroupCodeValueType.ExtendedDataDouble:
-					double d = (entry.Value as double?).Value;
+					//38 and 39 read from a DXF file are points there (Air CAD W1-19): the DWG keeps one real
+					double d = entry.Value is XYZ point ? point.X : (entry.Value as double?).Value;
 					ms.Write<double>(d);
 					break;
 				case GroupCodeValueType.Point3D:
-					XYZ xyz = (entry.Value as XYZ?).Value;
+					//110 to 112 and 210 read from a DXF file are single reals there (Air CAD W1-19): the DWG keeps a point
+					XYZ xyz = entry.Value is double single ? new XYZ(single, 0, 0) : (entry.Value as XYZ?).Value;
 					ms.Write<double>(xyz.X);
 					ms.Write<double>(xyz.Y);
 					ms.Write<double>(xyz.Z);
@@ -2528,6 +2543,7 @@ internal partial class DwgObjectWriter : DwgSectionIO
 					throw new NotSupportedException();
 			}
 		}
+		writePlaceholders(int.MaxValue);
 
 		//Common:
 		//Numdatabytes BL number of databytes

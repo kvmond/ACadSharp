@@ -714,7 +714,15 @@ internal class DxfObjectsSectionWriter : DxfSectionWriterBase
 						: e.GroupCode == GroupCodeValueType.Handle && e.Value is ulong raw ? raw : 0UL);
 					break;
 				default:
-					this._writer.Write(e.Code, e.Value);
+					if (e.Value is IVector point)
+					{
+						//110 to 112 and 210 read from a DWG file are points (Air CAD W1-19): 110/120/130 in the DXF
+						this._writer.Write(e.Code, point);
+					}
+					else
+					{
+						this._writer.Write(e.Code, e.Value);
+					}
 					break;
 			}
 		}

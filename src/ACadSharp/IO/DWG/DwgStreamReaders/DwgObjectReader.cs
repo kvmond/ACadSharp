@@ -7299,7 +7299,13 @@ namespace ACadSharp.IO.DWG
 				//3 8-byte doubles following. An indicator of 40 means 1 8-byte double. These indicator
 				//numbers all follow the normal DXF convention for group codes.
 				var code = this._objectReader.ReadShort();
-				var groupCode = GroupCodeValue.TransformValue(code);
+				if (code == DwgXRecordItems.Int64Placeholder && this.R2007Pre)
+				{
+					//No value follows: the 64-bit items are in the extended data (Air CAD W1-19)
+					xRecord.Int64Placeholders.Add(xRecord.Entries.Count());
+					continue;
+				}
+				var groupCode = DwgXRecordItems.TypeOf(code);
 
 				switch (groupCode)
 				{

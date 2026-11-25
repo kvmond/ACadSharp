@@ -37,24 +37,46 @@ namespace ACadSharp.IO.Templates
 			this.CadObject = polyLine;
 		}
 
+		/// <summary>
+		/// Adds vertices read from the file without giving them the polyline's properties: a vertex keeps the color, layer, line type and the rest
+		/// it was read with (Air CAD W1-19: a vertex of color 1 under a polyline of color BYLAYER was saved BYLAYER).
+		/// </summary>
+		private static void addAsRead<T>(Polyline<T> polyline, System.Action add)
+			where T : Entity, IVertex
+		{
+			bool match = polyline.MatchVerticesEntityProperties;
+			polyline.MatchVerticesEntityProperties = false;
+			try
+			{
+				add();
+			}
+			finally
+			{
+				polyline.MatchVerticesEntityProperties = match;
+			}
+		}
+
 		protected void addVertices(CadDocumentBuilder builder, params IEnumerable<Entity> vertices)
 		{
 			switch (this.CadObject)
 			{
 				case Polyline2D pline2d:
-					pline2d.Vertices.AddRange(vertices.Cast<Vertex2D>());
+					addAsRead(pline2d, () => pline2d.Vertices.AddRange(vertices.Cast<Vertex2D>()));
 					break;
 				case Polyline3D pline3d:
-					pline3d.Vertices.AddRange(vertices.Cast<Vertex3D>());
+					addAsRead(pline3d, () => pline3d.Vertices.AddRange(vertices.Cast<Vertex3D>()));
 					break;
 				case PolyfaceMesh mesh:
-					foreach (var item in vertices)
+					addAsRead(mesh, () =>
 					{
-						this.addPolyfaceMeshVertex(builder, mesh, item);
-					}
+						foreach (var item in vertices)
+						{
+							this.addPolyfaceMeshVertex(builder, mesh, item);
+						}
+					});
 					break;
 				case PolygonMesh polygon:
-					polygon.Vertices.AddRange(vertices.Cast<PolygonMeshVertex>());
+					addAsRead(polygon, () => polygon.Vertices.AddRange(vertices.Cast<PolygonMeshVertex>()));
 					break;
 				default:
 					builder.Notify($"Unknown polyline type {this.CadObject.SubclassMarker}", NotificationType.Warning);
@@ -140,13 +162,16 @@ namespace ACadSharp.IO.Templates
 
 		private void buildPolyfaceMesh(PolyfaceMesh polyfaceMesh, CadDocumentBuilder builder)
 		{
-			foreach (var handle in this.OwnedObjectsHandlers)
+			addAsRead(polyfaceMesh, () =>
 			{
-				if (builder.TryGetCadObject(handle, out Entity e))
+				foreach (var handle in this.OwnedObjectsHandlers)
 				{
-					this.addPolyfaceMeshVertex(builder, polyfaceMesh, e);
+					if (builder.TryGetCadObject(handle, out Entity e))
+					{
+						this.addPolyfaceMeshVertex(builder, polyfaceMesh, e);
+					}
 				}
-			}
+			});
 		}
 
 		private void addPolyfaceMeshVertex(CadDocumentBuilder builder, PolyfaceMesh polyfaceMesh, Entity e)
